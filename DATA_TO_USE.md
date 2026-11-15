@@ -33,8 +33,8 @@ Earthdata Search at retrieval time and recorded in the source manifest (`data/ma
 | `Qs_acc`, `Qsb_acc` | kg m⁻² per 3 h | surface + subsurface runoff R |
 | `Tair_f_inst` | K | air temperature (weather driver) |
 
-- **Recommended pull for the hackathon:** CONUS or one continent first (`--bbox -125 24 -66 50`), 2000-01 → 2025-12
-  (26 full years = 312 months; ≥120 months is the EGARCH data gate). Go global only after Gate E.
+- **Pull for the hackathon:** global, 2000-01 → 2025-12 (26 full years = 312 months; ≥120 months is the EGARCH data
+  gate). Files are global either way; `--bbox -125 24 -66 50` at run time gives the fast CONUS dev loop.
 - **Caveats:** model output driven by forcing, not independent observations. Monthly storages are monthly *means*,
   so the water budget uses `alignment="centered"`. Do **not** splice GLDAS-2.0 (1948–2014) onto 2.1: different forcing.
 

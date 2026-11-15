@@ -55,6 +55,28 @@ def test_regional_mean_area_weighted(ds):
     assert df.shape[0] == ds.sizes["time"] and df.shape[1] >= 1
 
 
+def test_tile_series_matches_region_loop(ds):
+    for tile in (0.5, 1.25):
+        fast = gldas.tile_series(ds, "soil_water_0_200cm", tile)
+        slow = gldas.region_series(ds, "soil_water_0_200cm", gldas.tile_regions(ds, tile))
+        assert list(fast.columns) == list(slow.columns)
+        pd.testing.assert_frame_equal(fast, slow, check_names=False, check_freq=False, rtol=1e-6)
+
+
+def test_tile_ids_grid_aligned():
+    g = gldas.TileGrid(np.array([-0.125, 0.125, 0.375]), np.array([-0.125, 0.125]), 0.25)
+    assert g.ids == ["tile_-000.25_-0000.25", "tile_-000.25_+0000.00", "tile_+000.00_-0000.25",
+                     "tile_+000.00_+0000.00", "tile_+000.25_-0000.25", "tile_+000.25_+0000.00"]
+
+
+def test_block_mean_preserves_water_budget(ds):
+    stack = np.stack([ds[v].values for v in ["land_water_store", "net_flux"]], axis=1)  # (T, 2, H, W)
+    c = np.stack([gldas.block_mean(s, ds.lat.values, 2) for s in stack])
+    assert c.shape[-2:] == (ds.sizes["lat"] // 2, ds.sizes["lon"] // 2)
+    resid = (c[1:, 0] - c[:-1, 0]) - c[1:, 1]
+    assert np.nanmax(np.abs(resid)) < 0.05 and np.isfinite(c).any()
+
+
 def test_qc(ds):
     rep = qc.qc_dataset(ds, [v for v in gldas.ALL_VARS if v in ds])
     assert rep["passed"] and rep["chronology"]["regular_monthly"]
@@ -110,6 +132,11 @@ def test_arima_egarch_on_egarch_process():
     assert r["egarch_status"] == "fitted", r.get("reason")
     assert 0.6 < r["persistence_beta"] < 1 and r["asymmetry_gamma"] < 0
     assert r["conditional_volatility"].notna().all()
+
+
+def test_egarch_degenerate_series_does_not_crash():
+    flat = pd.Series(np.full(240, 5.0), pd.date_range("2000-01-01", periods=240, freq="MS"))
+    assert variability.arima_egarch(flat)["egarch_status"] == "unavailable"
 
 
 def test_egarch_gate_rejects_white_noise_and_short():
@@ -170,12 +197,36 @@ def test_pinn_ablation_lambda_reduces_budget_residual(ds):
 
 # ---- end to end ------------------------------------------------------------------------------------------
 
+def test_streaming_ingest_matches_in_memory(raw_dir, ds, tmp_path):
+    from paradox.pipeline import ingest
+    (tmp_path / "manifests").mkdir()
+    ing = ingest(raw_dir, tmp_path, tile_deg=1.25, variables=("soil_water_0_200cm",), pinn_coarsen=1)
+    assert ing.report == qc.qc_dataset(ds, [v for v in gldas.ALL_VARS if v in ds])
+    pd.testing.assert_frame_equal(ing.series["soil_water_0_200cm"], gldas.tile_series(ds, "soil_water_0_200cm", 1.25),
+                                  check_names=False, check_freq=False)
+    arr, mask, months = ing.pinn.arrays()
+    ref_arr, ref_mask, ref_months = arrays_from_dataset(ds)
+    np.testing.assert_allclose(arr, ref_arr, atol=1e-4)
+    assert (mask == ref_mask).all() and (months == ref_months).all()
+
+
+def test_parallel_stats_match_serial(raw_dir, tmp_path):
+    from paradox.pipeline import ingest, run_stats
+    for sub in ["manifests", "volatility"]:
+        (tmp_path / sub).mkdir()
+    ing = ingest(raw_dir, tmp_path, tile_deg=1.25, variables=("soil_water_0_200cm",), pinn=False)
+    _, serial = run_stats(ing.series, ing.units, tmp_path, workers=1)
+    _, parallel = run_stats(ing.series, ing.units, tmp_path, workers=2)
+    pd.testing.assert_frame_equal(serial, parallel)
+
+
 def test_pipeline_end_to_end(raw_dir, tmp_path):
     from paradox.pipeline import run_all
-    out = run_all(raw_dir, tmp_path, pinn_cfg=PINNConfig(epochs=2, alignment="forward", hidden=8),
-                  stats_kwargs={"tile_deg": 1.25, "variables": ("soil_water_0_200cm",)})
+    out = run_all(raw_dir, tmp_path, tile_deg=1.25, variables=("soil_water_0_200cm",), workers=1,
+                  pinn_cfg=PINNConfig(epochs=2, alignment="forward", hidden=8), pinn_coarsen=2)
     recs = json.loads((tmp_path / "records.json").read_text())
     assert recs and recs[0]["trend"]["status"] == "ok"
     assert recs[0]["variability"]["egarch_status"] in {"fitted", "inconclusive", "unavailable"}
     assert (tmp_path / "pinn_ablation.json").exists() and (tmp_path / "manifests").is_dir()
+    assert (tmp_path / "tiles.csv").exists() and out["pinn"]["coarsen"] == 2
     assert out["qc"]["passed"]

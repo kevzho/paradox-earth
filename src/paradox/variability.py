@@ -114,6 +114,9 @@ def arima_egarch(anom: pd.Series, min_n: int = 120, lb_lags: int = 12, arch_alph
     out["gates"]["arch_evidence"] = bool(lm_p < arch_alpha)
 
     scale = float(resid.std(ddof=1))
+    if not (np.isfinite(scale) and scale > 0):  # e.g. constant series over ice sheets or hyper-arid tiles
+        out["reason"] = "degenerate (zero-variance) residuals"
+        return out
     z_in = resid / scale  # arch optimiser is best-behaved near unit variance
     res = arch_model(z_in, mean="Zero", vol="EGARCH", p=1, o=1, q=1, dist="normal", rescale=False).fit(
         disp="off", show_warning=False)

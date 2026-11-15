@@ -267,8 +267,12 @@ def evaluate(model, prep: Prepared, split: str = "test") -> dict:
 
 def ablation(ds: xr.Dataset, cfg: PINNConfig, lams=(0.0, 0.1), store: str = "land_water_store") -> dict:
     """Train identical models differing only in lambda; report test metrics for each (Manifest §10.4-10.5)."""
-    arr, mask, months = arrays_from_dataset(ds, store)
-    results = {"config": asdict(cfg), "runs": {}}
+    return ablation_arrays(*arrays_from_dataset(ds, store), cfg, lams)
+
+
+def ablation_arrays(arr, mask, months, cfg: PINNConfig, lams=(0.0, 0.1)) -> dict:
+    """`ablation` on prepared (T, 5, H, W) arrays, e.g. from the streaming ingest (pipeline.PinnGridAccumulator)."""
+    results = {"config": asdict(cfg), "runs": {}, "grid_shape": list(arr.shape[-2:])}
     for lam in lams:
         c = PINNConfig(**{**asdict(cfg), "lam": lam})
         prep = Prepared(arr, mask, months, c)
