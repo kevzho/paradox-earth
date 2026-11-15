@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+
+import numpy as np
 
 
 @dataclass
@@ -57,3 +60,29 @@ def analysis_record(region_id: str, dataset: str, variable: str, window, trend: 
         "quality": quality or {},
         "provenance": {"manifest_path": manifest_path},
     }
+
+
+def _clean(o):
+    """Recursively make `o` strict-JSON serialisable: numpy scalars -> Python, NaN/inf -> None."""
+    if isinstance(o, dict):
+        return {str(k): _clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_clean(v) for v in o]
+    if isinstance(o, np.ndarray):
+        return _clean(o.tolist())
+    if isinstance(o, (np.bool_, bool)):
+        return bool(o)
+    if isinstance(o, (np.integer, int)):
+        return int(o)
+    if isinstance(o, (np.floating, float)):
+        return float(o) if math.isfinite(o) else None
+    if o is None or isinstance(o, str):
+        return o
+    return str(o)
+
+
+def write_json(path: str | Path, obj) -> Path:
+    """Write strict JSON (no bare NaN/Infinity, which browsers and most parsers reject)."""
+    path = Path(path)
+    path.write_text(json.dumps(_clean(obj), indent=2, allow_nan=False))
+    return path

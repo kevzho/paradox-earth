@@ -7,6 +7,8 @@ import xarray as xr
 
 from .gldas import PHYSICAL_RANGES
 
+RANGE_RTOL = 1e-5  # float32 storage puts values at a bound one ULP past it (e.g. saturated soil 300.0001 vs 300)
+
 
 def check_chronology(time_values) -> dict:
     t = pd.DatetimeIndex(time_values)
@@ -50,6 +52,9 @@ class QCAccumulator:
                 x = ds[v].isel(time=i).values.ravel().astype(float)
                 fin = np.isfinite(x)
                 lo, hi = PHYSICAL_RANGES.get(v, (-np.inf, np.inf))
+                # per-bound tolerance: absorbs float32 rounding at a bound without loosening the zero floor
+                lo = lo - RANGE_RTOL * max(abs(lo), 1.0) if np.isfinite(lo) else lo
+                hi = hi + RANGE_RTOL * max(abs(hi), 1.0) if np.isfinite(hi) else hi
                 s = self.state[v]
                 s["finite"] += fin
                 s["oor"] += fin & ((x < lo) | (x > hi))
@@ -73,7 +78,8 @@ class QCAccumulator:
                 "min": float(s["min"][land].min()) if any_valid else None,
                 "p50": float(np.nanmedian(samp)) if any_valid and np.isfinite(samp).any() else None,
                 "max": float(s["max"][land].max()) if any_valid else None,
-                "p50_method": "exact" if len(self.sample) == len(land) else f"strided sample of {len(self.sample)} cells",
+                "p50_method": ("exact" if len(self.sample) == len(land)
+                               else f"strided sample of {len(self.sample)} cells"),
             }
         c = report["chronology"]
         report["passed"] = bool(c["monotonic"] and c["duplicates"] == 0 and

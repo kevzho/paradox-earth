@@ -1,0 +1,113 @@
+{
+  "chronology": {
+    "n_steps": 312,
+    "start": "2000-01-01",
+    "end": "2025-12-01",
+    "monotonic": true,
+    "duplicates": 0,
+    "missing_months": 0,
+    "regular_monthly": true
+  },
+  "variables": {
+    "SoilMoi0_10cm_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 2.000725746154785,
+      "p50": 23.754457473754883,
+      "max": 51.392250061035156,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "SoilMoi10_40cm_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 5.999999523162842,
+      "p50": 68.97223663330078,
+      "max": 154.1769256591797,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "SoilMoi40_100cm_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 11.999999046325684,
+      "p50": 123.1413459777832,
+      "max": 307.9718933105469,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "SoilMoi100_200cm_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 20.0,
+      "p50": 231.52572631835938,
+      "max": 461.052734375,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "SWE_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 0.0,
+      "p50": 0.0,
+      "max": 956.8265380859375,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "CanopInt_inst": {
+      "units": "mm",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 0.0,
+      "p50": 0.09961693733930588,
+      "max": 0.5,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "Rainf_f_tavg": {
+      "units": "mm month-1",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 0.0,
+      "p50": 54.88318079710007,
+      "max": 739.0656070709229,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "Evap_tavg": {
+      "units": "mm month-1",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": -5.304086774587631,
+      "p50": 35.254929542541504,
+      "max": 233.10195922851562,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "Qs_acc": {
+      "units": "mm month-1",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 0.0,
+      "p50": 0.4541599936783314,
+      "max": 312.5507926940918,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "Qsb_acc": {
+      "units": "mm month-1",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 0.0,
+      "p50": 0.6998293977230787,
+      "max": 596.3468074798584,
+      "p50_method": "strided sample of 8182 cells"
+    },
+    "Tair_f_inst": {
+      "units": "K",
+      "missing_fraction_land": 0.0,
+      "out_of_range": 0,
+      "min": 248.50840759277344,
+      "p50": 285.587158203125,
+      "max": 311.610107421875,
+      "p50_method": "strided sample of 8182 cells"
+    }
+  },
+  "passed": true
+}

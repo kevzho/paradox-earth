@@ -1,0 +1,38 @@
+{
+  "provider": "NASA GES DISC",
+  "dataset": "GLDAS_NOAH025_M",
+  "variable": "SoilMoi0_10cm_inst,SoilMoi10_40cm_inst,SoilMoi40_100cm_inst,SoilMoi100_200cm_inst,SWE_inst,CanopInt_inst,Rainf_f_tavg,Evap_tavg,Qs_acc,Qsb_acc,Tair_f_inst",
+  "version": "2.1",
+  "units": "storage mm; flux mm/month totals; T K",
+  "temporal_resolution": "monthly",
+  "spatial_resolution": "0.25 deg",
+  "effective_spatial_support": "0.25 deg model grid (land-surface model output)",
+  "coverage": {
+    "time": [
+      "2000-01-01",
+      "2025-12-01"
+    ],
+    "bbox": [
+      -124.875,
+      24.125,
+      -66.125,
+      49.875
+    ]
+  },
+  "quality_flags": [],
+  "missing_fraction": 0.0,
+  "provenance": {
+    "files": 312,
+    "first_file_sha256_1MB": "18ecda826cfbab34",
+    "title": "GLDAS2.1 LIS land surface model output monthly mean",
+    "steps": [
+      "load_file",
+      "to_monthly_water_units",
+      "add_derived",
+      "streaming tile aggregation"
+    ],
+    "tile_deg": 1.0,
+    "min_coverage": 0.5
+  },
+  "created_utc": "2026-11-15T12:55:42+00:00"
+}

@@ -11,12 +11,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from paradox.pinn import PINNConfig  # noqa: E402
-from paradox.pipeline import run_all  # noqa: E402
-from paradox.synthetic import make_synthetic  # noqa: E402
-
 
 def main():
+    # imported here, not at module level: spawned stats workers re-import this file and must not load torch
+    from paradox.pinn import PINNConfig
+    from paradox.pipeline import run_all
+    from paradox.synthetic import make_synthetic
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default="data/raw/gldas")
     ap.add_argument("--out", default="outputs")
@@ -29,8 +30,18 @@ def main():
     ap.add_argument("--alignment", default="centered", choices=["centered", "forward"])
     ap.add_argument("--no-pinn", action="store_true", help="skip the forecasting extension")
     ap.add_argument("--pinn-coarsen", type=int, default=1, help="block-average the PINN grid (4 => 1 degree)")
+    ap.add_argument("--perms", type=int, default=9999, help="spatial permutations (0 skips §7 in a full run)")
+    ap.add_argument("--spatial-only", action="store_true", help="re-run §7 on an existing --out without recomputing")
     ap.add_argument("--synthetic", action="store_true")
     args = ap.parse_args()
+
+    if args.spatial_only:
+        if args.perms <= 0:
+            ap.error("--spatial-only needs --perms > 0")
+        from paradox.spatial import run_from_outputs
+        for k, v in run_from_outputs(args.out, permutations=args.perms).items():
+            print(k, v.get("label_counts", v.get("status")), "global I", v.get("global_moran", {}).get("I"))
+        return
 
     if args.synthetic:
         args.raw = "data/raw/synthetic"
@@ -40,9 +51,12 @@ def main():
     cfg = PINNConfig(epochs=args.epochs, alignment=args.alignment)
     out = run_all(args.raw, args.out, bbox=args.bbox, tile_deg=args.tile,
                   ref_period=tuple(args.ref) if args.ref else None, workers=args.workers,
-                  pinn_cfg=cfg, lams=(0.0, args.lam), pinn=not args.no_pinn, pinn_coarsen=args.pinn_coarsen)
+                  pinn_cfg=cfg, lams=(0.0, args.lam), pinn=not args.no_pinn, pinn_coarsen=args.pinn_coarsen,
+                  spatial_perms=args.perms)
     print("QC passed:", out["qc"]["passed"])
     print(out["summary"].groupby(["variable", "egarch_status"]).size().to_string())
+    for k, v in (out["spatial"] or {}).items():
+        print(k, v.get("label_counts", v.get("status")))
     if out["pinn"]:
         for k, r in out["pinn"]["runs"].items():
             m = r["test"]["in_region"]

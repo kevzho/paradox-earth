@@ -1,0 +1,22 @@
+{
+  "raw_dir": "data/raw/gldas",
+  "bbox": [
+    -125.0,
+    24.0,
+    -66.0,
+    50.0
+  ],
+  "tile_deg": 1.0,
+  "variables": [
+    "soil_water_0_200cm",
+    "Rainf_f_tavg"
+  ],
+  "ref_period": [
+    "2000-01",
+    "2017-12"
+  ],
+  "workers": 10,
+  "pinn": null,
+  "pinn_coarsen": 1,
+  "spatial_permutations": 9999
+}

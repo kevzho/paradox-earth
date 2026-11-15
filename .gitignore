@@ -9,3 +9,4 @@ outputs/
 *.nc4
 *.nc
 .pytest_cache/
+data/*.log

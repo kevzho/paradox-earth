@@ -14,6 +14,7 @@ import pandas as pd
 import xarray as xr
 
 DATASET = "GLDAS_NOAH025_M"
+GRID_DEG = 0.25  # native spacing; used when an axis has a single cell and the spacing cannot be inferred
 VERSION = "2.1"
 
 STORAGE_VARS = ["SoilMoi0_10cm_inst", "SoilMoi10_40cm_inst", "SoilMoi40_100cm_inst",
@@ -23,9 +24,12 @@ ACC_VARS = ["Qs_acc", "Qsb_acc"]                     # kg m-2 per 3 h (monthly m
 TEMP_VARS = ["Tair_f_inst"]
 ALL_VARS = STORAGE_VARS + RATE_VARS + ACC_VARS + TEMP_VARS
 
-PHYSICAL_RANGES = {  # loose plausibility bounds in harmonised units, used by QC
+PHYSICAL_RANGES = {  # loose plausibility bounds in harmonised units, used by QC (with a small tolerance, qc.RANGE_RTOL)
+    # soil-layer bounds = layer thickness at full saturation, a value Noah actually stores on land-ice cells
     "SoilMoi0_10cm_inst": (0, 100), "SoilMoi10_40cm_inst": (0, 300), "SoilMoi40_100cm_inst": (0, 600),
-    "SoilMoi100_200cm_inst": (0, 1000), "SWE_inst": (0, 1e5), "CanopInt_inst": (0, 10),
+    "SoilMoi100_200cm_inst": (0, 1000),
+    "SWE_inst": (0, 1e6),  # Noah SWE accumulates without bound on ice sheets (Greenland > 1e5 mm already in 2000)
+    "CanopInt_inst": (0, 10),
     "Rainf_f_tavg": (0, 3000), "Evap_tavg": (-200, 1000), "Qs_acc": (0, 3000), "Qsb_acc": (0, 3000),
     "Tair_f_inst": (180, 340),
 }
@@ -124,6 +128,12 @@ class TileGrid:
 
     def __init__(self, lat, lon, tile_deg: float):
         lat, lon = np.asarray(lat, float), np.asarray(lon, float)
+        spacing = [abs(float(np.median(np.diff(c)))) if len(c) > 1 else GRID_DEG for c in (lat, lon)]
+        steps = [tile_deg / d for d in spacing]
+        if any(abs(k - round(k)) > 1e-6 for k in steps):
+            raise ValueError(f"tile_deg={tile_deg} is not a multiple of the grid spacing {spacing}")
+        if len(lon) * spacing[1] >= 360.0 - 1e-6 and abs(360.0 / tile_deg - round(360.0 / tile_deg)) > 1e-6:
+            raise ValueError(f"global grid: tile_deg={tile_deg} must divide 360 so dateline tiles stay whole")
         s = np.round(np.floor(lat / tile_deg + 1e-9) * tile_deg, 6)
         w = np.round(np.floor(lon / tile_deg + 1e-9) * tile_deg, 6)
         s_u, s_i = np.unique(s, return_inverse=True)
@@ -135,6 +145,11 @@ class TileGrid:
         self.ids = [f"tile_{a:+07.2f}_{b:+08.2f}" for a, b in corners]
         self.boxes = {rid: (b, a, b + tile_deg, a + tile_deg) for rid, (a, b) in zip(self.ids, corners)}
         self.cell_weight = np.broadcast_to(np.cos(np.deg2rad(lat))[:, None], self.shape).ravel()
+        # tiles cut by the domain edge (a bbox not aligned to tile_deg) would otherwise pass the coverage gate as if
+        # they were full tiles, because coverage is measured against cells present; keep only complete tiles
+        n_cells = int(round(steps[0])) * int(round(steps[1]))
+        self.complete = np.bincount(self.cell_tile, minlength=len(self.ids)) == n_cells
+        self.boxes = {rid: box for (rid, box), ok in zip(self.boxes.items(), self.complete) if ok}
 
     def sums(self, field: np.ndarray):
         """Per-tile (sum of w*x over valid cells, sum of w over valid cells) for one 2-D field."""
@@ -177,7 +192,7 @@ class TileAccumulator:
             with np.errstate(invalid="ignore", divide="ignore"):
                 mean = np.where(sw > 0, swx / sw, np.nan)
                 mean = np.where(sw / total >= min_coverage, mean, np.nan)
-            keep = total > 0
+            keep = (total > 0) & g.complete
             df = pd.DataFrame(mean[:, keep], index=idx, columns=np.array(g.ids)[keep]).sort_index()
             out[v] = df
         return out

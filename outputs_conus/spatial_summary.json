@@ -1,0 +1,178 @@
+{
+  "soil_water_0_200cm__trend_slope": {
+    "status": "ok",
+    "n_tiles": 1132,
+    "n_islands": 1,
+    "global_moran": {
+      "I": 0.6241084895286039,
+      "expected_I": -0.0008849557522123894,
+      "z_sim": 39.92492514489422,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1131,
+      "permutations": 9999
+    },
+    "global_moran_knn": {
+      "I": 0.6274007270405935,
+      "expected_I": -0.0008841732979664014,
+      "z_sim": 42.758348250631336,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1132,
+      "permutations": 9999
+    },
+    "label_counts": {
+      "inconclusive": 932,
+      "HH_cluster": 118,
+      "LL_cluster": 76,
+      "HL_outlier": 4,
+      "LH_outlier": 1,
+      "no_neighbors": 1
+    },
+    "n_raw_p_below_alpha": 352,
+    "robustness": {
+      "knn_k": 8,
+      "agreement_on_significant": 0.9195979899497487,
+      "gi_star_sign_agrees_on_clusters": 1.0
+    },
+    "method": {
+      "weights": "queen lattice (dateline wrap when global), row-standardised",
+      "alt_weights": "kNN k=8 on unit sphere",
+      "inference": "two-sided conditional permutation pseudo p-value (p_sim) -> BH",
+      "permutations": 9999,
+      "multiple_testing": "Benjamini-Hochberg, q < 0.05",
+      "seed": 0
+    }
+  },
+  "soil_water_0_200cm__log_variance_ratio": {
+    "status": "ok",
+    "n_tiles": 1132,
+    "n_islands": 1,
+    "global_moran": {
+      "I": 0.6886489354827252,
+      "expected_I": -0.0008849557522123894,
+      "z_sim": 44.57041814021767,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1131,
+      "permutations": 9999
+    },
+    "global_moran_knn": {
+      "I": 0.6778783272244977,
+      "expected_I": -0.0008841732979664014,
+      "z_sim": 46.52512057558972,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1132,
+      "permutations": 9999
+    },
+    "label_counts": {
+      "inconclusive": 850,
+      "LL_cluster": 162,
+      "HH_cluster": 117,
+      "LH_outlier": 2,
+      "no_neighbors": 1
+    },
+    "n_raw_p_below_alpha": 471,
+    "robustness": {
+      "knn_k": 8,
+      "agreement_on_significant": 0.9359430604982206,
+      "gi_star_sign_agrees_on_clusters": 1.0
+    },
+    "method": {
+      "weights": "queen lattice (dateline wrap when global), row-standardised",
+      "alt_weights": "kNN k=8 on unit sphere",
+      "inference": "two-sided conditional permutation pseudo p-value (p_sim) -> BH",
+      "permutations": 9999,
+      "multiple_testing": "Benjamini-Hochberg, q < 0.05",
+      "seed": 0
+    }
+  },
+  "Rainf_f_tavg__trend_slope": {
+    "status": "ok",
+    "n_tiles": 1134,
+    "n_islands": 0,
+    "global_moran": {
+      "I": 0.5790310604707953,
+      "expected_I": -0.00088261253309797,
+      "z_sim": 37.03379736689241,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 1.896274742140191e-301,
+      "n": 1134,
+      "permutations": 9999
+    },
+    "global_moran_knn": {
+      "I": 0.5565539042907773,
+      "expected_I": -0.00088261253309797,
+      "z_sim": 37.88554255418962,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1134,
+      "permutations": 9999
+    },
+    "label_counts": {
+      "inconclusive": 927,
+      "HH_cluster": 124,
+      "LL_cluster": 76,
+      "HL_outlier": 5,
+      "LH_outlier": 2
+    },
+    "n_raw_p_below_alpha": 373,
+    "robustness": {
+      "knn_k": 8,
+      "agreement_on_significant": 1.0,
+      "gi_star_sign_agrees_on_clusters": 1.0
+    },
+    "method": {
+      "weights": "queen lattice (dateline wrap when global), row-standardised",
+      "alt_weights": "kNN k=8 on unit sphere",
+      "inference": "two-sided conditional permutation pseudo p-value (p_sim) -> BH",
+      "permutations": 9999,
+      "multiple_testing": "Benjamini-Hochberg, q < 0.05",
+      "seed": 0
+    }
+  },
+  "Rainf_f_tavg__log_variance_ratio": {
+    "status": "ok",
+    "n_tiles": 1134,
+    "n_islands": 0,
+    "global_moran": {
+      "I": 0.7148318077848475,
+      "expected_I": -0.00088261253309797,
+      "z_sim": 46.172948417902056,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1134,
+      "permutations": 9999
+    },
+    "global_moran_knn": {
+      "I": 0.6972747815114586,
+      "expected_I": -0.00088261253309797,
+      "z_sim": 48.13383575327562,
+      "p_sim_one_sided": 0.0001,
+      "p_norm_two_sided": 0.0,
+      "n": 1134,
+      "permutations": 9999
+    },
+    "label_counts": {
+      "inconclusive": 855,
+      "HH_cluster": 138,
+      "LL_cluster": 138,
+      "HL_outlier": 3
+    },
+    "n_raw_p_below_alpha": 410,
+    "robustness": {
+      "knn_k": 8,
+      "agreement_on_significant": 0.996415770609319,
+      "gi_star_sign_agrees_on_clusters": 1.0
+    },
+    "method": {
+      "weights": "queen lattice (dateline wrap when global), row-standardised",
+      "alt_weights": "kNN k=8 on unit sphere",
+      "inference": "two-sided conditional permutation pseudo p-value (p_sim) -> BH",
+      "permutations": 9999,
+      "multiple_testing": "Benjamini-Hochberg, q < 0.05",
+      "seed": 0
+    }
+  }
+}

@@ -230,3 +230,145 @@ def test_pipeline_end_to_end(raw_dir, tmp_path):
     assert (tmp_path / "pinn_ablation.json").exists() and (tmp_path / "manifests").is_dir()
     assert (tmp_path / "tiles.csv").exists() and out["pinn"]["coarsen"] == 2
     assert out["qc"]["passed"]
+
+
+# ---- spatial statistics (§7) -------------------------------------------------------------------------------
+
+def _lattice(n_lat=30, n_lon=40, west=-180.0, deg=1.0):
+    rows = [(f"tile_{s:+07.2f}_{w:+08.2f}", w, s, w + deg, s + deg)
+            for s in np.arange(0, n_lat) * deg for w in west + np.arange(n_lon) * deg]
+    return pd.DataFrame(rows, columns=["region_id", "west", "south", "east", "north"])
+
+
+def test_lattice_neighbors_queen_and_dateline_wrap():
+    from paradox import spatial
+    t = _lattice(n_lat=5, n_lon=360)  # spans 360 degrees -> wraps
+    nb = spatial.lattice_neighbors(t, t.region_id)
+    assert len(nb["tile_+002.00_+0010.00"]) == 8 and len(nb["tile_+000.00_+0010.00"]) == 5
+    assert "tile_+002.00_+0179.00" in nb["tile_+002.00_-0180.00"]
+    part = _lattice(n_lat=5, n_lon=20)  # regional -> no wrap
+    assert "tile_+002.00_-0161.00" not in spatial.lattice_neighbors(part, part.region_id)["tile_+002.00_-0180.00"]
+
+
+def test_lisa_recovers_planted_cluster_and_stays_quiet_on_noise():
+    from paradox import spatial
+    t = _lattice()
+    rng = np.random.default_rng(0)
+    v = pd.Series(rng.standard_normal(len(t)), index=t.region_id)
+    planted = (t.south.between(10, 17) & t.west.between(-170, -163)).to_numpy()
+    v[planted] += 2.0
+    table, s = spatial.analyse_field(v, t, permutations=9999)
+    lab = table["label"].reindex(v.index)
+    assert lab[planted].eq("HH_cluster").mean() > 0.5
+    assert lab[~planted].isin(["HH_cluster", "LL_cluster"]).mean() < 0.02
+    assert s["global_moran"]["I"] > 0 and s["global_moran"]["p_sim_one_sided"] < 0.01
+    null, s0 = spatial.analyse_field(pd.Series(rng.standard_normal(len(t)), index=t.region_id), t, permutations=9999)
+    assert null["label"].ne("inconclusive").mean() < 0.01
+
+
+def test_lisa_bh_calibrated_on_heavy_tailed_null():
+    """Regression: BH on a normal approximation of the permutation z labelled ~18 tiles per t(2) null map."""
+    from paradox import spatial
+    t = _lattice()
+    rng = np.random.default_rng(3)
+    for draw in (rng.standard_t(2, len(t)), rng.lognormal(0, 1.5, len(t))):
+        table, s = spatial.analyse_field(pd.Series(draw, index=t.region_id), t, permutations=9999)
+        assert table["label"].ne("inconclusive").sum() <= 2, s["label_counts"]
+
+
+def test_spatial_fills_records(raw_dir, tmp_path):
+    from paradox.pipeline import run_all
+    run_all(raw_dir, tmp_path, tile_deg=0.5, variables=("soil_water_0_200cm",), workers=1, pinn=False,
+            spatial_perms=99)
+    def no_nan(x):
+        raise ValueError(f"non-strict JSON constant {x}")
+    recs = json.loads((tmp_path / "records.json").read_text(), parse_constant=no_nan)
+    json.loads((tmp_path / "spatial_summary.json").read_text(), parse_constant=no_nan)
+    assert all(r["spatial"]["inference_status"] in {"evaluated", "not_evaluated"} for r in recs)
+    assert any(r["spatial"]["inference_status"] == "evaluated" for r in recs)
+    assert (tmp_path / "spatial_summary.json").exists()
+
+
+
+# ---- regressions from review ---------------------------------------------------------------------------------
+
+def test_failed_egarch_keeps_trend_and_baseline(monkeypatch):
+    from paradox import pipeline
+
+    def boom(*a, **k):
+        raise np.linalg.LinAlgError("Singular matrix")
+    monkeypatch.setattr(pipeline.variability, "arima_egarch", boom)
+    tr, var_rec, row, cv = pipeline._analyse(("v", "r", _series(slope=0.01), "mm", None, True))
+    assert tr["status"] == "ok" and row["slope_per_decade"] is not None
+    assert var_rec["baseline_change"]["variance_ratio_late_over_early"] is not None
+    assert var_rec["egarch_status"] == "unavailable" and "Singular" in var_rec["egarch"]["reason"] and cv is None
+
+
+def test_qc_tolerates_float32_saturation():
+    import xarray as xr
+    d = xr.Dataset({"SoilMoi10_40cm_inst": (("time", "lat", "lon"), np.full((1, 1, 1), 300.0001, np.float32),
+                                            {"units": "mm"})},
+                   coords={"time": pd.to_datetime(["2000-01-01"]), "lat": [0.125], "lon": [0.125]})
+    assert qc.qc_dataset(d)["passed"]
+    d["SoilMoi10_40cm_inst"][:] = 301.0
+    assert not qc.qc_dataset(d)["passed"]
+
+
+def test_partial_edge_tiles_dropped(ds):
+    # synthetic lat spans 30.0-32.0: with 1.25-degree tiles the 31.25-32.5 row is cut by the domain edge
+    df = gldas.tile_series(ds, "soil_water_0_200cm", 1.25)
+    assert all(c.startswith("tile_+030.00") for c in df.columns) and df.shape[1] >= 1
+    with pytest.raises(ValueError):
+        gldas.TileGrid(ds.lat.values, ds.lon.values, 0.3)
+
+
+def test_spatial_islands_get_knn_label_and_gi_agreement_none():
+    from paradox import spatial
+    t = pd.concat([_lattice(n_lat=6, n_lon=6), _lattice(n_lat=1, n_lon=1, west=-170.0)], ignore_index=True)
+    v = pd.Series(np.random.default_rng(1).standard_normal(len(t)), index=t.region_id)
+    table, s = spatial.analyse_field(v, t, permutations=99)
+    iso = "tile_+000.00_-0170.00"
+    assert table.loc[iso, "label"] == "no_neighbors" and isinstance(table.loc[iso, "label_knn"], str)
+    if not table["label"].isin(["HH_cluster", "LL_cluster"]).any():
+        assert s["robustness"]["gi_star_sign_agrees_on_clusters"] is None
+
+
+def test_gi_star_matches_esda_on_positive_data():
+    from esda.getisord import G_Local
+    from paradox import spatial
+    t = _lattice(n_lat=10, n_lon=12)
+    y = np.random.default_rng(4).lognormal(0, 0.5, len(t))
+    w, _ = spatial.to_w(spatial.lattice_neighbors(t, t.region_id))
+    ours = spatial.gi_star(y, w)["gi_z"].to_numpy()
+    import copy
+    wb = copy.deepcopy(w)
+    wb.transform = "B"
+    ref = G_Local(y, wb, transform="B", star=True, permutations=0).Zs
+    np.testing.assert_allclose(ours, ref, rtol=1e-6, atol=1e-8)
+
+
+def test_review2_edge_cases(ds, tmp_path):
+    import xarray as xr
+    from paradox import spatial
+    # QC: zero floor is not loosened by the upper-bound tolerance
+    d = xr.Dataset({"SWE_inst": (("time", "lat", "lon"), np.full((1, 1, 1), -9.0, np.float32), {"units": "mm"})},
+                   coords={"time": pd.to_datetime(["2000-01-01"]), "lat": [0.125], "lon": [0.125]})
+    assert not qc.qc_dataset(d)["passed"]
+    # tiling: descending latitude gives the same tiles; global grids need tile_deg dividing 360
+    asc = gldas.TileGrid(ds.lat.values, ds.lon.values, 0.5)
+    desc = gldas.TileGrid(ds.lat.values[::-1], ds.lon.values, 0.5)
+    assert sorted(asc.boxes) == sorted(desc.boxes) and asc.boxes
+    glon = -179.875 + 0.25 * np.arange(1440)
+    with pytest.raises(ValueError):
+        gldas.TileGrid(np.array([0.125, 0.375]), glon, 1.75)
+    assert len(gldas.TileGrid(np.array([0.125]), glon, 0.25).boxes) == 1440
+    assert not gldas.TileGrid(np.array([0.125]), glon, 1.0).boxes  # one cell tall cannot fill a 1-degree tile
+    # spatial: constant map and an all-islands map are reported, not labelled or fatal
+    t = _lattice(n_lat=5, n_lon=5)
+    with pytest.raises(ValueError):
+        spatial.analyse_field(pd.Series(1.0, index=t.region_id), t, permutations=99)
+    recs = [{"region_id": rid, "variable": "v", "trend": {"slope": 1.0},
+             "variability": {"baseline_change": {"variance_ratio_late_over_early": 1.0 + i}}}
+            for i, rid in enumerate(t.region_id)]
+    summ = spatial.run_spatial(recs, t, tmp_path, permutations=99)
+    assert summ["v__trend_slope"]["status"] == "error" and summ["v__log_variance_ratio"]["status"] == "ok"
