@@ -181,8 +181,8 @@ def _analyse(job):
                   else {"egarch_status": "not_evaluated"})
     var_rec = {
         "baseline_change": {k: emp.get(k) for k in
-                            ["variance_ratio_late_over_early", "variance_ratio_ci95", "brown_forsythe_p",
-                             "mad_ratio_late_over_early", "split", "method"]},
+                            ["innovation_variance_ratio_late_over_early", "pw_bf_p", "ar_order",
+                             "variance_ratio_late_over_early", "mad_ratio_late_over_early", "split", "method"]},
         "egarch_status": eg["egarch_status"],
         "egarch": {k: eg.get(k) for k in ["arima", "arch_lm", "params", "persistence_beta",
                                           "asymmetry_gamma", "diagnostics", "gates", "reason"]},
@@ -190,7 +190,7 @@ def _analyse(job):
     var_rec["baseline_change"]["status"] = emp.get("status")
     row = {"variable": var, "region_id": rid, "slope_per_decade": tr.get("slope"),
            "slope_pct_per_decade": tr.get("slope_pct_per_decade"), "trend_p": tr.get("p_value"),
-           "var_ratio": emp.get("variance_ratio_late_over_early"), "bf_p": emp.get("brown_forsythe_p"),
+           "var_ratio": emp.get("innovation_variance_ratio_late_over_early"), "var_p": emp.get("pw_bf_p"),
            "egarch_status": eg["egarch_status"]}
     # only gate-passing fits are exported as volatility paths (§6 S4: otherwise ship the empirical baseline)
     cv = eg.get("conditional_volatility") if eg["egarch_status"] == "fitted" else None

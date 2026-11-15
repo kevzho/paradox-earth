@@ -115,9 +115,9 @@ def test_trend_recovers_slope():
 def test_empirical_variability_detects_change():
     y = _series(sigma=1.0)
     y.iloc[120:] = y.iloc[120:] * 1 + np.random.default_rng(5).normal(0, 2.0, 120)
-    r = variability.empirical_variability(seasonal.anomalies(y)["anomaly"], n_boot=300)
-    assert r["variance_ratio_late_over_early"] > 2 and r["brown_forsythe_p"] < 0.01
-    assert r["variance_ratio_ci95"][0] > 1
+    r = variability.empirical_variability(seasonal.anomalies(y)["anomaly"])
+    assert r["innovation_variance_ratio_late_over_early"] > 2 and r["pw_bf_p"] < 0.01
+    assert r["variance_ratio_late_over_early"] > 2  # descriptive raw ratio still reported
 
 
 def test_arima_egarch_on_egarch_process():
@@ -371,7 +371,7 @@ def test_review2_edge_cases(ds, tmp_path):
     with pytest.raises(ValueError):
         spatial.analyse_field(pd.Series(1.0, index=t.region_id), t, permutations=99)
     recs = [{"region_id": rid, "variable": "v", "trend": {"slope": 1.0},
-             "variability": {"baseline_change": {"variance_ratio_late_over_early": 1.0 + i}}}
+             "variability": {"baseline_change": {"innovation_variance_ratio_late_over_early": 1.0 + i}}}
             for i, rid in enumerate(t.region_id)]
     summ = spatial.run_spatial(recs, t, tmp_path, permutations=99)
     assert summ["v__trend_slope"]["status"] == "error" and summ["v__log_variance_ratio"]["status"] == "ok"
@@ -469,3 +469,26 @@ def test_soil_water_restricted_to_forcing_regime():
     tr_p, *_ = pipeline._analyse(("Rainf_f_tavg", "r", y, "mm", ("2000-01", "2017-12"), False))
     assert tr_p["window"] == ["2000-01-01", "2025-12-01"]
     assert pipeline.homogeneity_note("soil_water_0_200cm")["window"] == ["2012-01", "2024-06"]
+
+
+
+def test_variance_test_calibrated_under_persistence_and_steps():
+    """Regression: raw Brown-Forsythe rejected ~44% at phi=0.87; a mean step must not read as a variance change."""
+    rng = np.random.default_rng(11)
+    idx = pd.date_range("2000-01-01", periods=312, freq="MS")
+
+    def ar(phi, scale=None):
+        z = rng.standard_normal(312) * (scale if scale is not None else 1.0)
+        e = np.zeros(312)
+        for t in range(1, 312):
+            e[t] = phi * e[t - 1] + z[t]
+        return pd.Series(e, idx)
+    null = sum(variability.prewhitened_variance_change(ar(0.87))["pw_bf_p"] < 0.05 for _ in range(200))
+    step = sum(variability.prewhitened_variance_change(ar(0.87) - 3.0 * (idx >= "2012-01"))["pw_bf_p"] < 0.05
+               for _ in range(200))
+    assert null / 200 < 0.10 and step / 200 < 0.10
+    sd = np.where(idx >= "2013-01", np.sqrt(2.0), 1.0)
+    power = sum(variability.prewhitened_variance_change(ar(0.87, sd))["pw_bf_p"] < 0.05 for _ in range(100))
+    assert power / 100 > 0.7
+    flat = pd.Series(np.full(312, 5.0), idx)
+    assert variability.prewhitened_variance_change(flat)["status"] == "degenerate"

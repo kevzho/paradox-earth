@@ -32,7 +32,7 @@ from .contract import write_json
 FIELDS = {  # field name -> (record path, transform)
     "trend_slope": (("trend", "slope"), None),
     "trend_slope_pct": (("trend", "slope_pct_per_decade"), None),
-    "log_variance_ratio": (("variability", "baseline_change", "variance_ratio_late_over_early"), np.log),
+    "log_variance_ratio": (("variability", "baseline_change", "innovation_variance_ratio_late_over_early"), np.log),
 }
 QUADRANTS = {1: "HH_cluster", 2: "LH_outlier", 3: "LL_cluster", 4: "HL_outlier"}  # esda quadrant codes
 QUEEN = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]

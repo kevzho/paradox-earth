@@ -1,4 +1,5 @@
-"""S4: empirical variability baseline, then ARIMA mean model + EGARCH(1,1) conditional volatility with an
+"""S4: calibrated variance-change test (prewhitened Brown-Forsythe), then ARIMA mean model + EGARCH(1,1)
+conditional volatility with an
 explicit eligibility gate (Manifest §6 S4). Input is a seasonal-anomaly series (see seasonal.anomalies).
 
 EGARCH(1,1) as parameterised by `arch` (matches the manifest):
@@ -18,38 +19,87 @@ from statsmodels.tsa.arima.model import ARIMA
 # ---------------------------------------------------------------- empirical baseline
 
 
-def _block_bootstrap(x: np.ndarray, block: int, rng) -> np.ndarray:
+def _ar_innovations(x: np.ndarray, months: np.ndarray, pmax: int = 4):
+    """Residuals of x_t on [1, t, month dummies, x_{t-1..t-p}], p in 1..pmax by AIC on a common sample."""
     n = len(x)
-    starts = rng.integers(0, max(n - block + 1, 1), size=int(np.ceil(n / block)))
-    return np.concatenate([x[s:s + block] for s in starts])[:n]
+    tt = np.arange(n, dtype=float)
+    md = np.column_stack([(months == m) for m in range(2, 13)]).astype(float)
+
+    def fit(q, start):
+        lags = [x[start - j:n - j] for j in range(1, q + 1)]
+        X = np.column_stack([np.ones(n - start), tt[start:], md[start:]] + lags)
+        b, *_ = np.linalg.lstsq(X, x[start:], rcond=None)
+        return x[start:] - X @ b, X.shape[1]
+
+    aic = []
+    for q in range(1, pmax + 1):
+        e, k = fit(q, pmax)
+        aic.append((n - pmax) * np.log(np.mean(e ** 2)) + 2 * k)
+    p = int(np.argmin(aic)) + 1
+    return fit(p, p)[0], p
 
 
-def empirical_variability(anom: pd.Series, window: int = 36, block: int = 12, n_boot: int = 2000,
-                          split: str | None = None, seed: int = 0) -> dict:
-    """Rolling variance, early-vs-late variance ratio (Brown-Forsythe test + moving-block bootstrap CI on the
-    log ratio), and robust MAD ratio. `split` = first date of the late period (default: midpoint)."""
+def prewhitened_variance_change(anom: pd.Series, split: str | None = None, pmax: int = 4) -> dict:
+    """Prewhitened, state-adjusted Brown-Forsythe test of an early-vs-late change in innovation variance.
+
+    1. AR(p) innovations with trend + month dummies fitted on the whole record (a trend, a mean step or a
+       reference-window climatology no longer masquerades as a variance change).
+    2. z = |innovation - median of its half|; regress z on [1, late, month dummies, L, L^2] with L the standardised
+       lagged level (bounded soil water has level-dependent variance).
+    3. t of `late` deflated by sqrt((1-r)/(1+r)), r = lag-1 ACF of the z residuals; two-sided t(n-k) p-value.
+    Simulated size 3.9-6.1% under AR(1) phi 0..0.95, trends, steps, seasonal heteroskedasticity and real-tile
+    surrogates, versus 43-64% for Brown-Forsythe on raw anomalies at phi 0.87-0.95.
+    """
+    y = anom.asfreq("MS") if anom.index.freq is None else anom
+    if y.isna().any() or len(y) < 96:
+        return {"status": "insufficient_data", "n": int(y.notna().sum())}
+    x = y.values.astype(float)
+    if not np.isfinite(x).all() or np.std(x) <= 1e-9 * max(1.0, np.abs(x).max()):
+        return {"status": "degenerate", "n": len(x)}
+    months = y.index.month.values
+    split_ts = pd.Timestamp(split) if split else y.index[len(y) // 2]
+    e, p = _ar_innovations(x, months, pmax)
+    late = (y.index[p:] >= split_ts).astype(float)
+    ea, eb = e[late == 0], e[late == 1]
+    z = np.where(late == 1, np.abs(e - np.median(eb)), np.abs(e - np.median(ea)))
+    lev = x[p - 1:-1]
+    lev = (lev - lev.mean()) / lev.std()
+    mon = months[p:]
+    X = np.column_stack([np.ones(len(z)), late] + [(mon == m).astype(float) for m in range(2, 13)] + [lev, lev ** 2])
+    xtxi = np.linalg.inv(X.T @ X)
+    b = xtxi @ (X.T @ z)
+    u = z - X @ b
+    n, k = X.shape
+    t = b[1] / np.sqrt((u @ u) / (n - k) * xtxi[1, 1])
+    r = max(float(u[1:] @ u[:-1] / (u @ u)), 0.0)
+    t_adj = t * np.sqrt((1 - r) / (1 + r))
+    return {"status": "ok", "split": str(split_ts.date()), "ar_order": p,
+            "innovation_variance_ratio_late_over_early": float(np.var(eb, ddof=1) / np.var(ea, ddof=1)),
+            "pw_bf_t": float(t_adj), "pw_bf_p": float(2 * stats.t.sf(abs(t_adj), n - k)), "z_lag1_acf": r}
+
+
+def empirical_variability(anom: pd.Series, window: int = 36, split: str | None = None) -> dict:
+    """Early-vs-late variance change of seasonal anomalies. The TEST is the prewhitened, state-adjusted
+    Brown-Forsythe (pw_bf_p) on innovation variance; the raw anomaly variance ratio, MAD ratio and rolling variance are
+    descriptive only (the raw ratio is biased up ~7% when the climatology reference excludes the late years).
+    `split` = first date of the late period (default: midpoint)."""
     x = anom.dropna()
     if len(x) < 48:
         return {"status": "insufficient_data", "n": int(len(x))}
     split_ts = pd.Timestamp(split) if split else x.index[len(x) // 2]
     early, late = x[x.index < split_ts].values, x[x.index >= split_ts].values
-    ratio = float(np.var(late, ddof=1) / np.var(early, ddof=1))
-    bf = stats.levene(early, late, center="median")
-    rng = np.random.default_rng(seed)
-    boots = np.array([np.log(np.var(_block_bootstrap(late, block, rng), ddof=1) /
-                             np.var(_block_bootstrap(early, block, rng), ddof=1)) for _ in range(n_boot)])
-    lo, hi = np.exp(np.percentile(boots, [2.5, 97.5]))
+    pw = prewhitened_variance_change(anom, split=str(split_ts.date()))
     mad = lambda a: stats.median_abs_deviation(a, scale="normal")  # noqa: E731
-    roll = x.rolling(window, min_periods=int(window * 2 / 3)).var()
     return {
-        "status": "ok",
+        "status": pw["status"],
         "n_early": int(len(early)), "n_late": int(len(late)), "split": str(split_ts.date()),
-        "variance_ratio_late_over_early": ratio,
-        "variance_ratio_ci95": [float(lo), float(hi)],
-        "brown_forsythe_p": float(bf.pvalue),
-        "mad_ratio_late_over_early": float(mad(late) / mad(early)),
-        "rolling_variance": roll,
-        "method": f"BF test + moving-block bootstrap (block={block}, B={n_boot}); rolling window={window}",
+        "innovation_variance_ratio_late_over_early": pw.get("innovation_variance_ratio_late_over_early"),
+        "pw_bf_p": pw.get("pw_bf_p"), "ar_order": pw.get("ar_order"),
+        "variance_ratio_late_over_early": float(np.var(late, ddof=1) / np.var(early, ddof=1)),  # descriptive
+        "mad_ratio_late_over_early": float(mad(late) / mad(early)),  # descriptive
+        "rolling_variance": x.rolling(window, min_periods=int(window * 2 / 3)).var(),
+        "method": ("prewhitened state-adjusted Brown-Forsythe on AR(p) innovations (trend + month dummies, level "
+                   f"control, z-persistence deflation); raw ratio / MAD / rolling window={window} descriptive"),
     }
 
 
