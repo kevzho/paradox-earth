@@ -479,7 +479,13 @@ class Renderer:
         f = self.fig
         if a <= 0.01 or not feat:
             return
-        pill(f, x - 0.01, y - 0.62, 0.33, 0.70, PANEL, alpha=a * 0.96)
+        y_top = y
+        checks = feat.get("checks") or []
+        indep = next((c for c in checks if "independent precipitation" in str(c.get("check", "")).lower()
+                      or "chirps" in str(c.get("check", "")).lower()), None)
+        if indep and str(indep.get("status")).lower() not in ("pass", "partial"):
+            indep = None
+        pill(f, x - 0.01, y - 0.66, 0.33, 0.74, PANEL, alpha=a * 0.96)
         txt(f, x, y + 0.035, label, size=20, color=color, weight="bold", alpha=a)
         place = wrap(str(feat["place"]).split(" (")[0], 30, 2)
         txt(f, x, y - 0.03, "\n".join(place), size=27, weight="bold", alpha=a, va="top",
@@ -498,9 +504,17 @@ class Renderer:
             wl = wrap(who, 40, 2)
             txt(f, x, y - 0.29, "\n".join(wl), size=19, alpha=a, va="top", linespacing=1.25)
             if dec:
-                txt(f, x, y - 0.30 - 0.042 * len(wl), "\n".join(wrap("Decision: " + dec, 50, 3)),
+                txt(f, x, y - 0.30 - 0.042 * len(wl), "\n".join(wrap("Decision: " + dec, 50, 2 if indep else 3)),
                     size=17, color=MUTED, alpha=a, va="top", linespacing=1.25)
-        checks = feat.get("checks") or []
+        if indep:
+            full = str(indep.get("status")).lower() == "pass"
+            m = re.search(r"Over (\d{4})-(\d{4})", str(indep.get("detail", "")))
+            yrs = f" {m.group(1)}–{m.group(2)}" if m else ""
+            col = GOOD if full else "#e8c547"
+            txt(f, x, y_top - 0.60, ("✓  " if full else "~  ") + "Independent precipitation product",
+                size=19, color=col, weight="bold", alpha=a)
+            txt(f, x, y_top - 0.635, f"CHIRPS (via NASA FLDAS){yrs} {'agrees' if full else 'partly agrees'}",
+                size=18, color=MUTED, alpha=a)
         if not who and not checks:
             txt(f, x, y - 0.33, "Full Discovery Card in the explorer:\nrobustness checklist, literature,\n"
                 "who uses it and for which decision", size=18, color=MUTED, alpha=a,
@@ -555,9 +569,16 @@ class Renderer:
             size=36, ha="center", alpha=a * ramp(t, 24.0, 24.4))
         txt(f, 0.5, 0.39, "in the model's input data.",
             size=36, ha="center", alpha=a * ramp(t, 24.0, 24.4))
+        fl = (self.D["meta"].get("soil_water") or {}).get("fldas") or {}
+        win = [str(w)[:4] for w in (fl.get("window") or [])]
+        p = fl.get("aggregate_p")
+        per = self.ds.get("period") or ["2000", "2025"]
+        n_years = int(str(per[-1])[:4]) - int(str(per[0])[:4]) + 1
+        tail = (f"(FLDAS{' ' + win[0] + '–' + win[-1] if len(win) == 2 else ''}: no detectable trend"
+                f"{f', p = {p:.2f}' if p is not None else ''})")
         txt(f, 0.5, 0.27,
-            "Soil water looked like a 26-year decline. It was two step changes matching documented\n"
-            "GLDAS-2.1 radiation-forcing changes, so the tool withdrew it instead of reporting it.",
+            f"Soil water looked like a {n_years}-year decline. It lines up with a GLDAS-{self.ds['version']} "
+            f"radiation-forcing change\nand disappears in a consistently forced NASA product {tail}.",
             size=23, color=MUTED, ha="center", alpha=a * ramp(t, 24.3, 24.7), linespacing=1.4)
 
     def s_end(self, t):
@@ -569,13 +590,13 @@ class Renderer:
             size=32, color=MUTED, ha="center", alpha=a)
         txt(f, 0.5, 0.665, "EVERY DISCOVERY CARD IS GRADED ON", size=18, color=MUTED,
             weight="bold", ha="center", alpha=a)
-        checks = ["FDR-corrected significance", "Stability across time windows",
-                  "Neighbour-definition agreement", "Independent literature"]
+        checks = ["FDR-corrected significance", "Stable across time windows",
+                  "Neighbour definitions agree", "Independent precipitation", "Independent literature"]
         for k, c in enumerate(checks):
             ca = a * ramp(t, 26.0 + 0.08 * k, 26.25 + 0.08 * k)
-            x = 0.0575 + k * 0.225
-            pill(f, x, 0.575, 0.21, 0.06, PANEL, alpha=ca)
-            txt(f, x + 0.105, 0.605, c, size=18, alpha=ca, ha="center")
+            x = 0.0375 + k * 0.187
+            pill(f, x, 0.575, 0.175, 0.06, PANEL, alpha=ca)
+            txt(f, x + 0.0875, 0.605, c, size=17, alpha=ca, ha="center")
         va = a * ramp(t, 26.15, 26.45)
         txt(f, 0.5, 0.48,
             "Next: more NASA variables · any region on demand · a card for every community",

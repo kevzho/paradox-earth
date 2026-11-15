@@ -430,8 +430,17 @@ def fallback_cards(regions, tiles_idx, tiles_rows):
 
 
 def pick_example_card(cards):
-    """Prefer the Chile drying card, then any drying card, then the first."""
+    """Prefer a 'robust' card (Sahel, then North China, then any robust one),
+    then the Chile drying card, then any drying card, then the first."""
     cand = [c for c in cards if c.get("kind") in ("drying", "wetting")]
+    robust = [c for c in cand if str(c.get("evidence_level", "")).lower().startswith("robust")]
+    for key in ("sahel", "north_china"):
+        for c in robust:
+            if key in str(c.get("id", "")).lower() or key.replace("_", " ") in (
+                    c.get("place", "") + c.get("title", "")).lower():
+                return c
+    if robust:
+        return robust[0]
     for c in cand:
         if "chile" in (c.get("place", "") + c.get("title", "")).lower():
             return c
@@ -453,7 +462,8 @@ def short_cite(c: str) -> str:
     y = re.search(r"\((\d{4})\)", c)
     if not m:
         return c[:40]
-    multi = c.count(",") > 2 or "et al" in c or "&" in c[:120]
+    authors = c.split("(", 1)[0]  # author list only: commas in the title must not trigger 'et al.'
+    multi = authors.count(",") > 2 or "et al" in authors or "&" in authors
     return f"{m.group(1).strip()}{' et al.' if multi else ''}{' ' + y.group(1) if y else ''}"
 
 
@@ -462,18 +472,26 @@ def short_detail(r, lit=None) -> str:
     d = str(r.get("detail") or "")
     name = str(r.get("check") or "").lower()
     if "significance" in name:
-        m = re.match(r"(\d+) of (\d+) tiles \((\d+%)\)", d)
+        m = re.search(r"(\d+) of (\d+) tiles \((\d+%)\)", d)
         q = re.search(r"q < ([0-9.]+)", d)
         if m:
             return f"{m.group(1)} of {m.group(2)} tiles significant, BH q < {q.group(1) if q else '0.05'}"
     if "time window" in name:
-        parts = re.findall(r"(\d{4}-\d{4}): ([+-]?[\d.]+%)", d)
+        parts = re.findall(r"(\d{4}-\d{4}): ([+-]?[\d.]+%)", d.split("Global shares")[0])
         if parts:
             return " · ".join(f"{a.replace('-', '–')}: {b}" for a, b in parts)
     if "neighbour" in name:
         m = re.search(r"and (\d+%) of the queen (\w+) tiles keep their label", d)
         if m:
             return f"{m.group(1)} of queen-LISA {m.group(2)} tiles keep the label under kNN weights"
+    if "independent precipitation" in name or "chirps" in name:
+        m = re.search(r"Over (\d{4})-(\d{4}), CHIRPS-based precipitation shows (\w+) in (\d+%) of "
+                      r"this region's (\d+) tiles.*?median trend ([+-]?[\d.]+) mm/month per decade "
+                      r"vs ([+-]?[\d.]+) in GLDAS", d)
+        if m:
+            y0, y1, word, share, n, f, g = m.groups()
+            return (f"CHIRPS {y0}–{y1}: {word} in {share} of {n} tiles · median "
+                    f"{f} vs {g} mm/month per decade in GLDAS")
     if "literature" in name and lit:
         cites = ", ".join(short_cite(x.get("citation")) for x in lit[:2])
         m = re.search(r"(\d+) agree, (\d+) partly", d)
@@ -573,6 +591,87 @@ def build_html(ctx):
     n_years = int(y1) - int(y0) + 1 if y0.isdigit() and y1.isdigit() else ""
     caveat0 = (m.get("caveats") or [""])[0]
 
+    # ---- slide 4: the NASA products, all read from meta.json -------------
+    sw = m.get("soil_water") or {}
+    ac = sw.get("artifact_control") or {}
+    fl = sw.get("fldas") or {}
+    gr = sw.get("grace") or {}
+    pc = get(m, "cross_checks", "precip_chirps_fldas", default={}) or {}
+    fl_ds = str(fl.get("dataset") or "")
+    fl_short = fl_ds.split(" (")[0].strip() or "FLDAS"
+    fl_doi_m = re.search(r"doi:\s*(10\.\S+)", fl_ds)
+    fl_doi = fl_doi_m.group(1).rstrip(".,;") if fl_doi_m else ""
+    fl_forc = re.search(r"\(([^)]*forcing[^)]*)\)", fl_ds)
+    fl_forc = fl_forc.group(1).split(", ", 1)[-1] if fl_forc else ""
+    ctrl_ver = next((v for v in (ac.get("forcing") or {}) if v != ds.get("version")), "")
+    ctrl_win = get(ac, "headline", "common_window", default=None) or []
+    fl_win = [str(x)[:4] for x in (fl.get("window") or [])]
+    pc_win = [str(x)[:4] for x in (pc.get("window") or [])]
+    gr_win = [str(x)[:4] for x in (gr.get("window") or [])]
+    gvf = gr.get("vs_fldas_soil_water") or {}
+    hot = gvf.get("hotspots") or {}
+    hot_name, hot_v = next(iter(hot.items()), (None, {}))
+    gr_rel = re.search(r"RL\S+(?: CRI)?", str(gr.get("product") or ""))
+    gr_rel = gr_rel.group(0) if gr_rel else ""
+
+    def yr(w):
+        return f"{w[0]}–{w[-1]}" if len(w) == 2 else ""
+
+    sources = [
+        ("nasa", "Main record", f"GLDAS-{ds.get('version', '')} Noah",
+         f"{ds.get('short_name', '')} v{ds.get('version', '')} · doi:{ds.get('doi', '')}",
+         f"Monthly precipitation (GPCP-based forcing) on one 0.25° grid, {y0}–{y1}: the trend tests run here."),
+        ("xchk", "Independent cross-check", "NASA FLDAS Noah",
+         f"{fl_short} · doi:{fl_doi}",
+         f"CHIRPS precipitation ({yr(pc_win)}): trend signs match on {fmt_pct(pc.get('sign_match_area_sig_either'), 0)} of land "
+         f"where either is significant, {fmt_pct(pc.get('sign_match_area_sig_both'), 0)} where both. "
+         f"Consistently forced soil water ({fl_forc})."),
+        ("xchk", "Control", f"GLDAS-{ctrl_ver} Noah",
+         f"{ds.get('short_name', '')} v{ctrl_ver} · same model, other forcing",
+         f"{str(ctrl_win[0])[:4] + '–' + str(ctrl_win[-1])[:4] + ': ' if len(ctrl_win) == 2 else ''}"
+         f"the {ac.get('step_date', '')} solar-radiation step shows up only in GLDAS-{ds.get('version', '')} "
+         f"({fmt_num(ac.get('swdown_step_21_W_m2'), 1, True)} vs {fmt_num(ac.get('swdown_step_20_W_m2'), 1, True)} W/m²)."),
+        ("obs", "Observations", "GRACE / GRACE-FO",
+         f"{gr.get('product', '')}",
+         f"Satellite gravity, {yr(gr_win)}: {fmt_pct(gr.get('land_area_share_fdr_significant'), 0)} of land shows "
+         f"FDR-significant storage trends"
+         + (f". {hot_name}: GRACE {fmt_num(hot_v.get('grace_mean_slope_mm_decade'), 0, True)} vs land model "
+            f"{fmt_num(hot_v.get('model_mean_slope_mm_decade'), 0, True)} mm/decade (groundwater is not in the model)."
+            if hot_name and hot_v.get("grace_mean_slope_mm_decade") is not None else ".")),
+    ]
+    src_html = "".join(
+        f'<div class="src {cls}"><div class="k">{esc(k)}</div><div class="t">{esc(t)}</div>'
+        f'<div class="id">{esc(i)}</div><p>{esc(p)}</p></div>'
+        for cls, k, t, i, p in sources)
+
+    # ---- slide 6: the GLDAS-2.1 vs 2.0 control figure + FLDAS no-trend ---
+    ac_uri = ctx.get("ac_uri")
+    ac_fig = (f'<img class="fig" src="{ac_uri}" alt="GLDAS-2.1 vs GLDAS-2.0: radiation step and soil water">'
+              if ac_uri else '<div class="shot pending">artefact-control figure unavailable</div>')
+    fl_ci = fl.get("aggregate_ci95") or [None, None]
+    fl_p = fl.get("aggregate_p")
+    fl_line = (f"In NASA FLDAS, forced consistently with {fl_forc.replace(' forcing', '') or 'one forcing'} over {yr(fl_win)}, global land "
+               f"soil water shows no detectable trend: {fmt_num(fl.get('aggregate_slope_mm_per_decade'), 1, True)} "
+               f"mm/decade (95% CI {fmt_num(fl_ci[0], 1)} to {fmt_num(fl_ci[1], 1)}, p = {fmt_p(fl_p)}).")
+    ac_reading = ac.get("reading") or retr_headline
+
+    # ---- slide 7: forecast lab line from site/data/pinn.json --------------
+    pinn = ctx.get("pinn") or {}
+    lab_line = ""
+    if pinn.get("rows"):
+        arm = get(pinn, "best_for_display", "arm", default="base")
+        rows = [r for r in pinn["rows"] if r.get("arm") == arm]
+        sk = [(r["lambda"], get(r, "test", "spatial_holdout", "msess_vs_linear_ar", "mean")) for r in rows]
+        sk_ok = [s for _, s in sk if s is not None and s > 0]
+        res = {r["lambda"]: get(r, "test", "in_region", "budget_residual_own_fluxes_mm", "mean") for r in rows}
+        r0 = res.get(0.0)
+        r1 = res.get(1.0)
+        if sk_ok and r0 is not None and r1 is not None:
+            lab_line = (f"<b>Forecast lab:</b> a physics-informed CNN emulator of the GLDAS-{esc(ds.get('version'))} land water store "
+                        f"beats a linear AR baseline by {fmt_num(min(sk_ok), 2, True)} to {fmt_num(max(sk_ok), 2, True)} MSESS "
+                        f"on a region held out of training; a water-budget penalty (λ = 1) cuts its budget residual "
+                        f"from {fmt_num(r0, 1)} to {fmt_num(r1, 1)} mm/month. Emulation skill against a model, not a forecast of reality.")
+
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>Paradox Earth Deck</title>
@@ -667,6 +766,21 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 .nasa-note {{ margin-top: 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }}
 .nasa-note p {{ font-size: 18px; }}
 
+.srcs {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }}
+.src {{ background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }}
+.src.nasa {{ border-color: var(--wet); }}
+.src.obs {{ border-color: var(--dry); }}
+.src .k {{ font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }}
+.src .t {{ font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; margin: 6px 0 4px; }}
+.src .id {{ font-family: var(--mono); font-size: 11px; color: var(--wet); line-height: 1.35; margin-bottom: 8px; word-break: break-word; }}
+.src p {{ font-size: 13.5px; line-height: 1.38; color: var(--muted); }}
+.s-how .flow {{ margin-top: 18px; }}
+.s-how .step {{ padding: 12px 14px; }}
+.s-how .step .k {{ margin-bottom: 4px; }}
+.s-how .step .t {{ font-size: 18px; margin-bottom: 4px; }}
+.s-how .step p {{ font-size: 12.5px; line-height: 1.35; }}
+.s-how h2 {{ font-size: 44px; }}
+
 /* 5 + 6 case file */
 .case {{ display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; margin-top: 18px; flex: 1; min-height: 0; }}
 .file {{ background: var(--panel); border: 1px solid var(--rule); border-radius: 12px;
@@ -700,6 +814,13 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 .stamp {{ position: absolute; bottom: 22px; right: 24px; font-family: var(--mono); font-weight: 500;
   font-size: 15px; letter-spacing: .2em; color: var(--dry); border: 2px solid var(--dry);
   padding: 6px 12px; transform: rotate(-4deg); border-radius: 4px; }}
+.s-card h2 {{ font-size: 44px; }}
+.s-card .case {{ margin-top: 12px; }}
+.s-card .chk {{ padding: 7px 0; }}
+.s-card .chk .mark {{ font-size: 20px; }}
+.s-card .chk-name {{ font-size: 16px; line-height: 1.25; }}
+.s-card .chk-detail {{ font-size: 13px; line-height: 1.3; }}
+.s-card .file {{ padding: 18px 22px; }}
 .s-retract .lede {{ font-size: 18px; line-height: 1.4; max-width: 1100px; margin-top: 12px; }}
 .s-retract h2 {{ font-size: 44px; }}
 .s-retract .case {{ margin-top: 14px !important; }}
@@ -708,6 +829,7 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 .s-retract .file .hl {{ font-size: 15px; }}
 .s-retract .who p {{ font-size: 14.5px; }}
 .s-retract .stamp {{ bottom: 14px; }}
+.s-retract .fl-line b {{ font-weight: 600; color: var(--wet); }}
 
 /* 7 explorer */
 .s-explore .row {{ display: grid; grid-template-columns: 1.35fr 1fr; gap: 40px; margin-top: 24px; }}
@@ -715,7 +837,15 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 .shot.pending {{ aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;
   font-family: var(--mono); color: var(--muted); font-size: 16px; letter-spacing: .1em;
   background: repeating-linear-gradient(135deg, var(--panel) 0 14px, var(--ink) 14px 28px); }}
-.next li {{ font-size: 18px; margin: 0 0 12px 20px; }}
+.next li {{ font-size: 16px; line-height: 1.36; margin: 0 0 8px 20px; }}
+.next li.lab {{ font-size: 14.5px; color: var(--muted); }}
+.next li.lab b {{ color: var(--wet); font-weight: 600; }}
+.s-explore h2 {{ font-size: 40px; max-width: none; }}
+.s-explore .row {{ grid-template-columns: 1.15fr 1fr; }}
+.s-explore .refs li {{ font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.s-explore .row {{ margin-top: 16px !important; }}
+.s-explore .links {{ margin-top: 10px; }}
+.s-explore .refs {{ margin-top: 10px; }}
 .links {{ margin-top: 22px; font-family: var(--mono); font-size: 13px; line-height: 1.8; white-space: nowrap; }}
 .links a {{ color: var(--wet); text-decoration: none; }}
 .refs {{ margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 10px; }}
@@ -779,23 +909,19 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 <!-- 4 HOW -->
 <section class="slide s-how">
   <div class="eyebrow">How NASA data makes it possible</div>
-  <h2>From {n_years} years of NASA land data to cards that grade themselves.</h2>
+  <h2>Four NASA products: one to find trends, three to try to break them.</h2>
+  <div class="srcs">{src_html}</div>
   <div class="flow">
-    <div class="step nasa"><div class="k">NASA data</div><div class="t">GLDAS-2.1 Noah</div><p>{esc(ds.get("provider"))} · monthly, 0.25°, {esc(period[0])} to {esc(period[-1])}. DOI {esc(ds.get("doi"))}</p></div>
-    <div class="arrow">→</div>
     <div class="step"><div class="k">Ingest</div><div class="t">Streaming pipeline</div><p>Reads one month at a time and aggregates to {get(m, "n_tiles", default=0):,} land tiles of {get(m, "tile_deg", default=1):g}°. Quality checks {"passed" if m.get("qc_passed") else "pending"}.</p></div>
     <div class="arrow">→</div>
     <div class="step"><div class="k">Test</div><div class="t">Calibrated trend tests</div><p>OLS trend; p is the larger of an AR(1)-corrected and an annual-means test (calibrated to 3–6% false positives), then Benjamini–Hochberg FDR.</p></div>
     <div class="arrow">→</div>
     <div class="step"><div class="k">Map</div><div class="t">Spatial clusters</div><p>Local Moran’s I with permutation tests finds coherent drying and wetting regions, not lone pixels.</p></div>
     <div class="arrow">→</div>
-    <div class="step out"><div class="k">Explain</div><div class="t">Discovery Cards</div><p>{n_cards} cards, each with a robustness checklist, a named user and decision, and its caveats.</p></div>
+    <div class="step out"><div class="k">Explain</div><div class="t">Discovery Cards</div><p>{n_cards} cards, each graded against the cross-checks above, with a named user, a decision and caveats.</p></div>
   </div>
-  <div class="nasa-note">
-    <p>Without a gap-free, globally consistent record there is nothing to split. GLDAS-2.1 gives the same monthly grid over every land surface for {y0}–{y1}, so a trend in Chile and a trend in Siberia are measured the same way.</p>
-    <p class="muted">The precipitation variable ({esc(ds.get("variable"))}) is GLDAS model forcing derived from GPCP. We call results “detectable trends” and “associated with”, never causes.</p>
-  </div>
-  <div class="foot"><span>{esc(ds.get("name"))}</span><span>4 / 7</span></div>
+  <p class="muted" style="font-size:14.5px;margin-top:14px;line-height:1.4">A gap-free, globally consistent NASA record lets a trend in Chile and one in Siberia be measured the same way; independent NASA products let each trend be challenged. Results are “detectable trends”, never causes.</p>
+  <div class="foot"><span>Data: NASA GES DISC (GLDAS, FLDAS) · NASA JPL (GRACE/GRACE-FO mascons) · {esc(ds.get("variable"))}</span><span>4 / 7</span></div>
 </section>
 
 <!-- 5 CARD -->
@@ -828,19 +954,19 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 <section class="slide s-retract">
   <div class="eyebrow">The detective that checks itself</div>
   <h2>Paradox Earth caught a false trend: it lines up with changes in the model’s input data.</h2>
-  <p class="lede muted">{esc(retr_headline)}</p>
-  <div class="case" style="grid-template-columns:1.25fr 1fr;margin-top:18px">
-    <div>{soil_fig}
-      <div class="legend"><span style="--c:{DRY}">naive straight-line “trend”</span><span style="--c:{TEXT}">{"level between shifts" if breaks_txt else "best step fit (level shifts)"}</span>{f'<span style="--c:{WET}">shift at {esc(breaks_txt)}</span>' if breaks_txt else ''}</div></div>
+  <p class="lede muted">{esc(ac_reading)}</p>
+  <div class="case" style="grid-template-columns:1.45fr 1fr;margin-top:14px">
+    <div>{ac_fig}</div>
     <div class="file">
       <div class="stamp">RETRACTED</div>
       <div class="tag">Soil water 0–200 cm · original headline</div>
-      <p class="hl" style="margin-top:12px">A step is not a trend. The break test lined the jump up with a documented change in GLDAS-2.1 radiation forcing (GES DISC README), so the soil-water decline was withdrawn instead of published.</p>
+      <p class="hl" style="margin-top:10px">A forcing change is not a trend. Our original {n_years}-year soil-water decline was withdrawn instead of published.</p>
+      <p class="hl fl-line" style="margin-top:10px"><b>{esc(fl_line)}</b></p>
       <div class="who"><div class="q">Who this protects</div>
         <p><b>{esc(retr_user.get("who"))}</b>: {esc(retr_user.get("decision"))}. <span class="muted">{esc(retr_user.get("why_it_matters"))}</span></p></div>
     </div>
   </div>
-  <div class="foot"><span>Rigor as a feature: the tool rejects its own result when the evidence does not hold.</span><span>6 / 7</span></div>
+  <div class="foot"><span>Figure: NASA GLDAS-2.1 vs GLDAS-2.0 (same Noah model, different forcing). The tool rejects its own result when the evidence does not hold.</span><span>6 / 7</span></div>
 </section>
 
 <!-- 7 EXPLORER -->
@@ -851,20 +977,20 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
     <div>{explorer}</div>
     <div>
       <ul class="next">
-        <li>Every land tile, its trend, and its corrected significance.</li>
-        <li>Discovery Cards for each coherent cluster, with users and decisions named.</li>
-        <li>Next: more NASA variables (snow, evapotranspiration, runoff), GPM IMERG as an independent check, and a card for your own region.</li>
+        <li>Every land tile with its corrected significance, and a graded Discovery Card for each coherent cluster.</li>
+        {f'<li class="lab">{lab_line}</li>' if lab_line else ''}
+        <li>Next: more NASA variables, GPM IMERG as a further check, and a card for your own region.</li>
       </ul>
       <div class="links">
         <div>explorer → <a href="{esc(team.get("site_url"))}">{esc(team.get("site_url"))}</a></div>
         <div>code → <a href="{esc(team.get("project_url"))}">{esc(team.get("project_url"))}</a></div>
       </div>
       <ul class="refs"><li class="q">References</li>
-        <li>Beaudoing &amp; Rodell (2020), GLDAS Noah L4 monthly 0.25° V2.1, NASA GES DISC, doi:10.5067/SXAVCZFAQLNO</li>
-        <li>Rodell et al. (2004), The Global Land Data Assimilation System, BAMS 85, 381–394</li>
-        <li>NASA GES DISC, README for GLDAS Version 2 data products (forcing changes)</li>
-        <li>Benjamini &amp; Hochberg (1995) FDR · Anselin (1995) LISA · Santer et al. (2000) n_eff</li>
-        <li>Brown &amp; Forsythe (1974) · per-region literature listed on each case file</li>
+        <li>Beaudoing &amp; Rodell (2020), GLDAS Noah V2.1, doi:{esc(ds.get("doi"))} · Rodell et al. (2004), BAMS 85</li>
+        <li>McNally et al. (2017), Sci. Data 4, 170012 · FLDAS Noah, doi:{esc(fl_doi or "10.5067/5NHC22T9375G")}</li>
+        <li>Funk et al. (2015), CHIRPS, Sci. Data 2 · Rodell et al. (2009), Nature 460, 999–1002</li>
+        <li>GRACE/GRACE-FO JPL mascons {esc(gr_rel)} · Watkins et al. (2015), JGR Solid Earth</li>
+        <li>GES DISC README, GLDAS V2 forcing changes · Benjamini &amp; Hochberg (1995) · Anselin (1995)</li>
       </ul>
     </div>
   </div>
@@ -1011,7 +1137,19 @@ def main():
         print(f"explorer screenshot: {'captured' if ok else 'FAILED'} -> {explorer_png}")
     explorer_uri = file_to_uri(explorer_png) if explorer_png.exists() else None
 
+    ac_fig = get(meta, "soil_water", "artifact_control", "figure", default=None)
+    ac_png = None
+    if ac_fig:
+        for cand in ((ROOT / "site" / ac_fig).resolve(), (DATA / ac_fig).resolve(), DEMO / Path(ac_fig).name):
+            if cand.exists():
+                ac_png = cand
+                break
+    ac_uri = file_to_uri(ac_png) if ac_png else None
+    print(f"artefact-control figure: {ac_png}")
+    pinn = load_json(DATA / "pinn.json", default={})
+
     ctx = dict(meta=meta, team=team, card=card, retraction_card=retraction_card,
+               ac_uri=ac_uri, pinn=pinn,
                line_uri=line_uri, map_uri=map_uri, soil_uri=soil_uri,
                soil_breaks=soil_breaks, explorer_uri=explorer_uri,
                n_cards=sum(1 for c in cards

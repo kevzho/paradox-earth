@@ -19,7 +19,7 @@
 
   // ---------- formatting ----------
   const fmt = (x, d = 1) => (x == null || !isFinite(x) ? "–" : Number(x).toFixed(d).replace("-", "−"));
-  const sgn = (x, d = 1) => (x == null || !isFinite(x) ? "–" : (x > 0 ? "+" : "") + fmt(x, d));
+  const sgn = (x, d = 1) => (x == null || !isFinite(x) ? "–" : +Number(x).toFixed(d) === 0 ? fmt(0, d) : (x > 0 ? "+" : "") + fmt(x, d));
   const pct = (x, d = 1) => (x == null ? "–" : fmt(x * 100, d) + "%");
   const pval = (p) => (p == null ? "–" : p < 0.001 ? "< 0.001" : fmt(p, p < 0.01 ? 3 : 2));
   const area = (km2) => {
@@ -514,7 +514,7 @@
     not_run: '<svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
   };
   const STATUS_LABEL = { pass: "Pass", partial: "Partial", fail: "Fail", not_run: "Not run" };
-  const KIND_LABEL = { wetting: "Wetting region", drying: "Drying region", retraction: "Caught a false trend", local: "Local region" };
+  const KIND_LABEL = { wetting: "Wetting region", drying: "Drying region", retraction: "Caught a false trend", observation: "Satellite observation", local: "Local region" };
   const normStatus = (s) => (STATUS_LABEL[s] ? s : "not_run");
 
   function gradeHTML(checks) {
@@ -523,7 +523,7 @@
     const selected = graded.length < checks.length;
     const pts = graded.reduce((a, c) => a + (c.status === "pass" ? 1 : c.status === "partial" ? 0.5 : 0), 0);
     const bars = graded.map((c) => `<i class="${normStatus(c.status)}"></i>`).join("");
-    return `<div class="grade" aria-label="Evidence grade ${pts} of ${graded.length} checks passed"><span class="grade-bars" aria-hidden="true">${bars}</span>${pts.toString().replace(".5", "½")} / ${graded.length} checks pass${selected ? " · selected by FDR" : ""}</div>`;
+    return `<div class="grade" aria-label="Evidence grade ${pts} of ${graded.length} checks passed"><span class="grade-bars" aria-hidden="true">${bars}</span>${pts === 0.5 ? "½" : pts.toString().replace(".5", "½")} / ${graded.length} ${selected ? "extra checks pass · selected by FDR" : "checks pass"}</div>`;
   }
   function checksHTML(checks) {
     return `<ul class="checks">${checks.map((c) => { const s = normStatus(c.status); return `<li><span class="status ${s}">${STATUS_ICON[s]}${STATUS_LABEL[s]}</span><span>${esc(c.check)}</span>${c.detail ? `<span class="detail">${esc(c.detail)}</span>` : ""}</li>`; }).join("")}</ul>`;
@@ -541,7 +541,7 @@
     return `<article class="card local" id="case-${esc(c.id)}" aria-labelledby="t-${esc(c.id)}">
       <div class="card-kind"><span class="dot"></span>${esc(KIND_LABEL.local)} <span class="pill">Placeholder</span></div>
       <h3 class="card-title" id="t-${esc(c.id)}">${esc(t.charAt(0).toUpperCase() + t.slice(1))}</h3>
-      <p class="headline">This slot is reserved for the team’s own region. Once a bounding box is chosen, the detector fills in the numbers, runs the same four checks, and names who would act on the result.</p>
+      <p class="headline">This slot is reserved for the team’s own region. Once a bounding box is chosen, the detector fills in the numbers, runs the same checks, and names who would act on the result.</p>
       ${checks.length ? gradeHTML(checks) + checksHTML(checks) : ""}
       <div class="card-foot"><span class="evidence">${esc(c.evidence_level || "not yet evaluated")}</span></div>
     </article>`;
@@ -555,7 +555,9 @@
     else if (n.median_slope_per_decade != null) nums.push(`<span><b>${sgn(n.median_slope_per_decade)}</b>mm/month per decade</span>`);
     if (n.area_km2 != null) nums.push(`<span><b>${area(n.area_km2)}</b>area</span>`);
     if (n.n_tiles != null) nums.push(`<span><b>${n.n_tiles}</b>tiles</span>`);
-    if (n.share_tiles_fdr_significant != null) nums.push(`<span><b>${pct(n.share_tiles_fdr_significant, 0)}</b>FDR-significant</span>`);
+    if (n.grace_mean_slope_mm_per_decade != null) nums.push(`<span><b>${sgn(n.grace_mean_slope_mm_per_decade, 0)}</b>GRACE mm/decade</span>`);
+    if (n.model_mean_slope_mm_per_decade != null) nums.push(`<span><b>${sgn(n.model_mean_slope_mm_per_decade, 0)}</b>soil model mm/decade</span>`);
+    if (n.share_tiles_fdr_significant != null) nums.push(`<span><b>${pct(n.share_tiles_fdr_significant, 0)}</b>${n.n_boxes != null ? "boxes " : ""}FDR-significant</span>`);
     const checks = c.robustness || [];
     const u = c.user || {};
     const showBtn = c.region_id && S.regionById.has(c.region_id);
@@ -611,7 +613,7 @@
   function renderCases() {
     const featured = S.cards.filter((c) => c.kind === "retraction");
     const rest = S.cards.filter((c) => c.kind !== "retraction");
-    const order = { wetting: 1, drying: 1, local: 3 };
+    const order = { wetting: 1, drying: 1, observation: 2, local: 3 };
     rest.sort((a, b) => (order[a.kind] || 2) - (order[b.kind] || 2));
     $("#featured").innerHTML = featured.map((c) => cardHTML(c, true)).join("");
     $("#cardGrid").innerHTML = rest.map((c) => cardHTML(c, false)).join("");
@@ -665,6 +667,154 @@
     } else if (flat.clientWidth) F.k = clamp(Math.min(flat.clientWidth / (fspan * 1.6), flat.clientHeight / (Math.max(n - s + 6, fspan * 0.6) * 1.6)), F.kMin || 1, 30);
   }
 
+
+  // ---------- soil water: the decline that wasn't ----------
+  const stepCI = (ci, d = 1) => (Array.isArray(ci) && ci.length === 2 ? ` (95% CI ${sgn(ci[0], d)} to ${sgn(ci[1], d)})` : "");
+  function caseLink(kind, label) {
+    const c = S.cards.find((x) => x.kind === kind);
+    return c ? `<a class="btn ghost" href="#case-${esc(c.id)}">${esc(label)}</a>` : "";
+  }
+  function renderSoil() {
+    const sw = S.meta?.soil_water;
+    if (!sw || typeof sw !== "object") return;
+    const ac = sw.artifact_control, fl = sw.fldas, gr = sw.grace;
+    if (!ac && !fl && !gr) return;
+    const r = S.meta.retraction || {};
+    const per = S.meta.dataset?.period || [];
+    $("#soilLede").textContent = `GLDAS-2.1 soil water first looked like a ${per.length ? `${+yearOf(per[1]) - +yearOf(per[0]) + 1}-year ` : ""}global decline. Paradox Earth ran three NASA cross-checks on its own headline: a second version of the same model, a consistently forced NASA land model, and satellite gravity. The second version and the consistently forced model show the decline is not a detectable climate signal (satellite gravity weighs all water, so it can neither confirm nor refute a soil-only trend), so it was withdrawn${(r.breakpoints || []).length ? ` (level shifts at ${r.breakpoints.map(esc).join(" and ")})` : ""}.`;
+    if (ac?.figure) {
+      const img = $("#soilImg");
+      img.src = ac.figure;
+      img.alt = "Two stacked time series, 2000 to 2014, comparing GLDAS-2.1 and GLDAS-2.0. Top: incoming solar radiation in the model forcing; only GLDAS-2.1 steps up after August 2010. Bottom: soil water 0 to 200 cm; both versions dip in 2011 to 2013, GLDAS-2.1 more deeply.";
+      $("#soilCap").textContent = ac.reading || "";
+      img.addEventListener("error", () => { $("#soilFig").hidden = true; }, { once: true });
+      $("#soilFig").hidden = false;
+    }
+    const steps = [];
+    if (ac) {
+      const h = ac.headline || {};
+      const s21 = ac.swdown_step_21_W_m2 ?? h["swdown_step_2.1_W_m2"], s20 = ac.swdown_step_20_W_m2 ?? h["swdown_step_2.0_W_m2"];
+      const w = h.common_window || [];
+      steps.push(`<article class="step"><p class="step-n">1 · Same model, different forcing</p>
+        <h3 class="step-t">GLDAS-2.1 vs GLDAS-2.0${w.length ? `, ${esc(yearOf(w[0]))}–${esc(yearOf(w[1]))}` : ""}</h3>
+        <p class="small muted">${esc(ac.what || "")}</p>
+        <div class="split"><div class="d"><div class="big">${sgn(s21)}</div><small>W/m² solar-radiation step at ${esc(ac.step_date || "")} in 2.1${stepCI(ac.swdown_step_21_ci95 ?? h["swdown_step_2.1_ci95"])}</small></div>
+        <div class="w"><div class="big">${sgn(s20)}</div><small>W/m² in 2.0, same date${stepCI(ac.swdown_step_20_ci95 ?? h["swdown_step_2.0_ci95"])}</small></div></div>
+        ${h["soil_trend_2.1_common_mm_per_decade"] != null ? `<p class="small">Soil-water trend over the common window: <span class="num">${sgn(h["soil_trend_2.1_common_mm_per_decade"])}</span> mm/decade in 2.1 (p = ${pval(h["soil_trend_2.1_common_p"])}) vs <span class="num">${sgn(h["soil_trend_2.0_common_mm_per_decade"])}</span> in 2.0 (p = ${pval(h["soil_trend_2.0_common_p"])}).</p>` : ""}
+      </article>`);
+    }
+    if (fl) {
+      const w = fl.window || [], ci = fl.aggregate_ci95;
+      const detectable = fl.aggregate_p != null && fl.aggregate_p < 0.05;
+      steps.push(`<article class="step"><p class="step-n">2 · A consistently forced NASA model</p>
+        <h3 class="step-t">NASA FLDAS, ${esc(yearOf(w[0]))}–${esc(yearOf(w[1]))}</h3>
+        <p class="small muted">Noah land model driven by MERRA-2 and CHIRPS, with no radiation-forcing switch.</p>
+        <dl class="stats">
+          <div><dt>Global land soil water</dt><dd>${sgn(fl.aggregate_slope_mm_per_decade)} mm/decade</dd></div>
+          <div><dt>95% interval · p</dt><dd>${Array.isArray(ci) ? `${sgn(ci[0])} to ${sgn(ci[1])}` : "–"} · ${pval(fl.aggregate_p)}</dd></div>
+          <div><dt>Land detectably wetting</dt><dd>${pct(fl.share_area_wetting)}</dd></div>
+          <div><dt>Land detectably drying</dt><dd>${pct(fl.share_area_drying)}</dd></div>
+        </dl>
+        <p class="verdict ${detectable ? (fl.aggregate_slope_mm_per_decade > 0 ? "wet" : "dry") : ""}">${detectable ? "Detectable global trend" : "No detectable global trend, and no decline"}</p>
+      </article>`);
+    }
+    const v = gr?.vs_fldas_soil_water;
+    if (gr) {
+      const w = gr.window || [];
+      const hs = Object.entries(v?.hotspots || {});
+      const short = (n) => String(n).replace(/\s*\(.*\)\s*$/, "");
+      steps.push(`<article class="step"><p class="step-n">3 · Satellite gravity</p>
+        <h3 class="step-t">GRACE/GRACE-FO, ${esc(yearOf(w[0]))}–${esc(yearOf(w[1]))}</h3>
+        <p class="small">GRACE weighs all water, including groundwater, lakes and ice. It shows FDR-significant storage trends over <span class="num">${pct(gr.land_area_share_fdr_significant, 0)}</span> of land${v ? `; where either is significant, its sign matches FLDAS soil water over <span class="num">${pct(v.sign_match_area_sig_either, 0)}</span> of the area (Spearman <span class="num">${fmt(v.spearman_slopes, 2)}</span>)` : ""}. The biggest mismatches line up with places where groundwater is pumped or lakes and inland seas are shrinking, which the land model does not include.</p>
+        ${hs.length ? `<div class="table-wrap"><table class="mini"><caption class="sr-only">GRACE hotspots: water-storage trend from GRACE versus the FLDAS soil-water trend, mm per decade</caption>
+          <thead><tr><th scope="col">Hotspot</th><th scope="col">GRACE<br>mm/dec</th><th scope="col">Soil model<br>mm/dec</th></tr></thead>
+          <tbody>${hs.map(([n, h]) => `<tr><th scope="row">${esc(short(n))}</th><td class="dry-t">${sgn(h.grace_mean_slope_mm_decade, 0)}</td><td>${sgn(h.model_mean_slope_mm_decade, 0)}</td></tr>`).join("")}</tbody></table></div>` : ""}
+        ${v?.note ? `<p class="small muted" style="margin-top:.6rem">${esc(v.note.charAt(0).toUpperCase() + v.note.slice(1))}.</p>` : ""}
+      </article>`);
+    }
+    $("#soilSteps").innerHTML = steps.join("");
+    $("#soilLinks").innerHTML = caseLink("retraction", "Read the retraction case file") + caseLink("observation", "Read the GRACE case file");
+    $("#soil").hidden = false; $("#navSoil").hidden = false;
+  }
+
+  // ---------- forecast lab: physics-informed emulator ----------
+  function renderLab() {
+    const P = S.pinn;
+    if (!P || !Array.isArray(P.rows) || !P.rows.length) return;
+    const d = P.design || {}, sp = d.splits_by_target_month || {};
+    const g = (o, path) => path.reduce((a, k) => (a == null ? a : a[k]), o);
+    const ms = (o) => (o && o.mean != null ? `${sgn(o.mean, 2)}<span class="sd"> ± ${fmt(o.sd, 2)}</span>` : "–");
+    const mm = (o) => (o && o.mean != null ? `${fmt(o.mean, 1)}<span class="sd"> ± ${fmt(o.sd, o.sd < 0.05 ? 2 : 1)}</span>` : "–");
+    const lam = (l) => (Number.isInteger(+l) ? String(+l) : String(+l));
+    const row = (arm, l) => P.rows.find((r) => r.arm === arm && +r.lambda === +l);
+    const arms = d.arms || [...new Set(P.rows.map((r) => r.arm))];
+    const nRuns = P.rows.reduce((a, r) => a + (g(r, ["test", "in_region", "msess_vs_linear_ar", "n"]) || 0), 0);
+    const yr = (a) => (a ? `${esc(a[0])} to ${esc(a[1])}` : "");
+    $("#labLede").textContent = "Can a small neural network learn how NASA’s land model moves water, and does teaching it the water budget help? We trained one to predict next month’s change in stored land water, then tested it on months and a region it never saw.";
+    $("#labExplain").innerHTML = `<h3>How it works</h3>
+      <ol class="how">
+        <li><strong>Target.</strong> The change in the GLDAS-2.1 land water store from one month to the next: soil water 0–200 cm plus snow and canopy water, on a ${d.coarsen ? `${fmt(0.25 * d.coarsen, 0)}°` : "coarse"} grid. This is the model’s store, not total water storage.</li>
+        <li><strong>Inputs.</strong> This month’s store plus the month’s rain and temperature (one arm also gets solar and longwave radiation).</li>
+        <li><strong>Physics term.</strong> A penalty with weight λ when the predicted change breaks the water budget: change in storage = rain − evaporation − runoff. λ = 0 is a plain network.</li>
+        <li><strong>Skill.</strong> Mean-squared-error skill against a linear autoregression that uses the same inputs: 0 means no better than the linear model, above 0 means better.</li>
+        <li><strong>Tests.</strong> Training months ${yr(sp.train)}; test months ${yr(sp.test)}; a held-out region (90°E–180°E) never used in training; and ${yr(sp.oor)}, after a documented change in the model’s radiation forcing (out-of-regime).</li>
+      </ol>
+      <p class="small muted">${nRuns ? `${nRuns} training runs` : "Training runs"}: ${arms.length} input sets × ${(d.lambdas || []).length} values of λ × ${(d.seeds || []).length} random seeds, ${esc(d.epochs || "")} epochs each, on a rented RunPod RTX 4090 GPU. Numbers below are means ± standard deviation across seeds.</p>`;
+
+    const b0 = row("base", 0), b1 = row("base", 1);
+    const floor = g(P, ["truth_floor_mm", "test", "in_region"]);
+    const tiles = [];
+    if (b1) {
+      tiles.push(`<div><dt>Skill vs linear model, test months</dt><dd>${ms(g(b1, ["test", "in_region", "msess_vs_linear_ar"]))}</dd></div>`);
+      tiles.push(`<div><dt>Skill vs linear model, held-out region</dt><dd>${ms(g(b1, ["test", "spatial_holdout", "msess_vs_linear_ar"]))}</dd></div>`);
+    }
+    if (b0 && b1) {
+      tiles.push(`<div><dt>Budget residual, <span class="nc">λ</span> = 0 → 1</dt><dd>${fmt(g(b0, ["test", "in_region", "budget_residual_own_fluxes_mm", "mean"]))} → ${fmt(g(b1, ["test", "in_region", "budget_residual_own_fluxes_mm", "mean"]))} mm/mo</dd></div>`);
+      tiles.push(`<div><dt>Mismatch with GLDAS fluxes, <span class="nc">λ</span> = 0 → 1</dt><dd>${fmt(g(b0, ["test", "in_region", "budget_residual_gldas_fluxes_mm", "mean"]))} → ${fmt(g(b1, ["test", "in_region", "budget_residual_gldas_fluxes_mm", "mean"]))} mm/mo</dd></div>`);
+    }
+    // radiation arm vs base under the regime shift (computed, phrased from the data)
+    const drop = (arm) => { const r = row(arm, 1); const a = g(r, ["test", "in_region", "msess_vs_linear_ar", "mean"]), o = g(r, ["oor", "in_region", "msess_vs_linear_ar", "mean"]); return a != null && o != null ? { a, o, d: a - o } : null; };
+    const db = drop("base"), dr = drop("radiation");
+    $("#labStats").innerHTML = `<h3>What we found (rain + temperature inputs, <span class="nc">λ</span> = 1)</h3>
+      ${tiles.length ? `<dl class="stats">${tiles.join("")}</dl>` : ""}
+      <ul class="findings">
+        <li>The physics term at λ = 1 brings the network’s water budget much closer to closing, with no loss of accuracy.${floor != null ? ` For reference, GLDAS’s own budget residual under the same monthly-mean approximation is <span class="num">${fmt(floor)}</span> mm/month (the truth floor).` : ""}</li>
+        <li>At λ = 10 the budget term dominates and skill collapses to about the linear model’s level.</li>
+        ${db && dr && dr.a <= db.a ? `<li>Giving the network radiation does not help: skill is ${sgn(dr.a, 2)} with radiation against ${sgn(db.a, 2)} without on test months, and ${sgn(dr.o, 2)} against ${sgn(db.o, 2)} after the 2024 change in the model’s radiation forcing.</li>` : ""}
+      </ul>`;
+
+    // results table
+    const lambdas = d.lambdas || [...new Set(P.rows.map((r) => +r.lambda))];
+    const body = [];
+    arms.forEach((arm) => lambdas.forEach((l) => {
+      const r = row(arm, l); if (!r) return;
+      const hl = +l === 1;
+      body.push(`<tr${hl ? ' class="hl"' : ""}><th scope="row">${esc(r.arm_label || arm)}</th><td>${lam(l)}${hl ? '<span class="sr-only"> (highlighted)</span>' : ""}</td>
+        <td>${ms(g(r, ["test", "in_region", "msess_vs_linear_ar"]))}</td><td>${ms(g(r, ["test", "spatial_holdout", "msess_vs_linear_ar"]))}</td><td>${ms(g(r, ["oor", "in_region", "msess_vs_linear_ar"]))}</td>
+        <td>${mm(g(r, ["test", "in_region", "budget_residual_own_fluxes_mm"]))}</td><td>${mm(g(r, ["test", "in_region", "budget_residual_gldas_fluxes_mm"]))}</td></tr>`);
+    }));
+    $("#labTable").innerHTML = `<caption class="sr-only">Emulator results for each input set and physics weight λ: skill against a linear autoregression on test months, the held-out region and out-of-regime months, and water-budget residuals in mm per month. Mean ± standard deviation across seeds.</caption>
+      <thead><tr><th scope="col">Inputs</th><th scope="col"><span class="nc">λ</span></th><th scope="col">Skill<br>test months</th><th scope="col">Skill<br>held-out region</th><th scope="col">Skill<br>out-of-regime</th><th scope="col">Budget residual<br>mm/mo</th><th scope="col">vs GLDAS fluxes<br>mm/mo</th></tr></thead>
+      <tbody>${body.join("")}</tbody>
+      ${floor != null ? `<tfoot><tr><th scope="row" colspan="5">Truth floor: GLDAS’s own budget residual (test months)</th><td>${fmt(floor)}</td><td></td></tr></tfoot>` : ""}`;
+    $("#labNote").textContent = "Skill is mean-squared-error skill on next-month storage change against a linear autoregression with the same inputs (0 = no better, 1 = perfect). Budget residual is |ΔS − (P − ET − R)| using the network’s own predicted fluxes; lower is closer to the physics. Highlighted rows: λ = 1.";
+
+    const figs = P.figures || {};
+    const figHTML = [];
+    if (figs.tradeoff) figHTML.push(`<figure class="fig"><img src="${esc(figs.tradeoff)}" width="1600" height="960" loading="lazy" decoding="async" alt="Scatter plot of skill against water-budget residual for every training run. Runs with λ = 1 keep the same skill as λ = 0 and 0.1 while roughly halving the residual; λ = 10 runs have the lowest residual but skill near zero. All runs sit left of GLDAS’s own residual line."><figcaption>Physics weight λ trades accuracy for budget closure. λ = 1 sits in the sweet spot; λ = 10 overshoots.</figcaption></figure>`);
+    if (figs.skill_map) figHTML.push(`<figure class="fig"><img src="${esc(figs.skill_map)}" width="1920" height="864" loading="lazy" decoding="async" alt="World map of the emulator’s skill against the linear model on test months, including the held-out region from 90°E to 180°E."><figcaption>Where the emulator beats the linear model on test months${P.best_for_display ? ` (${esc(row(P.best_for_display.arm, P.best_for_display.lambda)?.arm_label || P.best_for_display.arm)}, λ = ${lam(P.best_for_display.lambda)}, mean of seeds)` : ""}, including the held-out region east of 90°E. In deserts storage barely changes, so per-cell skill there swings to either extreme (deep blue Sahara, red Australian interior); the area-weighted numbers above are the fair summary.</figcaption></figure>`);
+    $("#labFigs").innerHTML = figHTML.join("");
+    $("#labFigs").querySelectorAll("img").forEach((im) => im.addEventListener("error", () => { im.closest("figure").hidden = true; }, { once: true }));
+
+    $("#labLimits").innerHTML = `<h3>Limits</h3><ul class="caveats">
+      <li>This is emulation skill against a model (GLDAS-2.1), not skill at forecasting real-world water.</li>
+      <li>The target is the model’s land water store (soil 0–200 cm, snow, canopy). It is not total water storage and leaves out groundwater, lakes and rivers.</li>
+      <li>The rain and temperature for the month being predicted are given to the network, so this is not a forecast that could be issued in advance.</li>
+      <li>Uses data from ${yr(d.window)}. Training and test months share one radiation-forcing regime; after the 2024 change in the model’s radiation inputs (${yr(sp.oor)}) skill ${P.rows.every((r) => g(r, ["oor", "in_region", "msess_vs_linear_ar", "mean"]) < g(r, ["test", "in_region", "msess_vs_linear_ar", "mean"])) ? "drops for every setting" : "drops for most settings"}.</li>
+    </ul>`;
+    $("#lab").hidden = false; $("#navLab").hidden = false;
+  }
+
   // ---------- method & credits ----------
   function renderMethod() {
     const m = S.meta, md = m.methods || {};
@@ -679,8 +829,25 @@
     $("#windowTable").innerHTML += `<thead><tr><th scope="col">Window</th><th scope="col">Global slope<br>mm/mo/dec</th><th scope="col">p</th><th scope="col">Area wetting</th><th scope="col">Area drying</th></tr></thead><tbody>`
       + rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${sgn(r[1], 2)}</td><td>${pval(r[2])}</td><td>${pct(r[3])}</td><td>${pct(r[4])}</td></tr>`).join("") + "</tbody>";
     $("#caveatList").innerHTML = (m.caveats || []).map((c) => `<li>${esc(c)}</li>`).join("");
+    const x = m.cross_checks?.precip_chirps_fldas;
+    if (x && x.sign_match_area_sig_either != null) {
+      const w = x.window || [];
+      $("#crossText").innerHTML = `GLDAS-2.1 precipitation is GPCP-based model forcing, so the detector repeats the trend test on NASA FLDAS precipitation, which is built from CHIRPS (${esc(w[0] || "")} to ${esc(w[1] || "")}${x.n_tiles ? `, ${x.n_tiles.toLocaleString("en-US")} tiles` : ""}). `
+        + `Where either product shows an FDR-significant trend, the signs match over <span class="num">${pct(x.sign_match_area_sig_either, 0)}</span> of the land area`
+        + `${x.sign_match_area_sig_both != null ? `, and over <span class="num">${pct(x.sign_match_area_sig_both, 0)}</span> where both do${x.n_sig_both != null ? ` (${x.n_sig_both} tiles)` : ""}` : ""}. `
+        + `${x.spearman_slopes_all != null ? `Across all tiles the trend slopes have a Spearman rank correlation of <span class="num">${fmt(x.spearman_slopes_all, 2)}</span>${x.sign_match_area_all != null ? ` and the same sign over <span class="num">${pct(x.sign_match_area_all, 0)}</span> of land` : ""}. ` : ""}`
+        + `Agreement is highest where trends are detectable, and lower across all tiles, most of which have no detectable trend in either product.`;
+      $("#crossBlock").hidden = false;
+    }
     const d = m.dataset;
     $("#dataCredit").innerHTML = `${esc(d.name)} (${esc(d.short_name)} v${esc(d.version)}), variable <span class="mono">${esc(d.variable)}</span>, ${esc(d.period?.[0])} to ${esc(d.period?.[1])}. Distributed by ${esc(d.provider)}: <a href="https://doi.org/${esc(d.doi)}" target="_blank" rel="noopener">doi:${esc(d.doi)}</a>. Without this freely available, consistently processed global record, a tile-by-tile search of every land area would not be possible.`;
+    {
+      const sw = m.soil_water || {}, extra = [];
+      if (sw.artifact_control) extra.push(`GLDAS-2.0 Noah (same model, ${esc(sw.artifact_control.forcing?.["2.0"] || "different forcing")}) as a forcing control`);
+      if (sw.fldas?.dataset) extra.push(`NASA FLDAS (${esc(sw.fldas.dataset)}) for soil water and CHIRPS-based precipitation`);
+      if (sw.grace?.product) extra.push(`${esc(sw.grace.product)} satellite gravity (NASA JPL)`);
+      if (extra.length) $("#dataCredit").innerHTML += ` Cross-checks use ${extra.join("; ")}.`;
+    }
   }
   async function loadTeam() {
     try {
@@ -710,6 +877,7 @@
       if (Array.isArray(cj.cards) && cj.cards.length) { S.cards = cj.cards; S.cardsFromFile = true; }
     } catch { /* cards.json not published yet: fall back below */ }
     if (!S.cardsFromFile) S.cards = fallbackCards();
+    try { S.pinn = await getJSON(DATA + "pinn.json"); } catch { S.pinn = null; /* emulator results not published: section stays hidden */ }
     S.cards.forEach((c) => { if (c.region_id) S.cardByRegion.set(c.region_id, c); });
 
     sizeTexture();
@@ -717,7 +885,7 @@
     const narrow = matchMedia("(max-width: 820px)").matches;
     const want = params.get("view") || (narrow || !canGlobe ? "flat" : "globe");
     setView(want === "flat" ? "flat" : "globe");
-    renderLegend(); renderCases(); renderMethod(); loadTeam();
+    renderLegend(); renderCases(); renderSoil(); renderLab(); renderMethod(); loadTeam();
 
     const hash = decodeURIComponent(location.hash || "");
     if (params.has("reveal") || hash.startsWith("#case=")) { S.reveal = 1; showIntro(2); } else showIntro(1);

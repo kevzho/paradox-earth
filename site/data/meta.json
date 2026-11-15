@@ -19,6 +19,7 @@
   "tile_deg": 1.0,
   "n_tiles": 17284,
   "qc_passed": true,
+  "source_run": "outputs_global_v2",
   "headline": {
     "aggregate": {
       "slope": -0.8842083845587811,
@@ -117,5 +118,278 @@
       "2024-06"
     ],
     "text": "Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window."
+  },
+  "soil_water": {
+    "artifact_control": {
+      "what": "GLDAS-2.1 vs GLDAS-2.0: same Noah model and grid, different forcing, 2000-2014",
+      "step_date": "2010-08",
+      "forcing": {
+        "2.1": "GDAS atmospheric analysis + GPCP precipitation + AGRMET radiation",
+        "2.0": "Princeton Global Meteorological Forcing (reanalysis-based)"
+      },
+      "source": "https://hydro1.gesdisc.eosdis.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/doc/README_GLDAS2.pdf",
+      "swdown_step_21_W_m2": 8.76757,
+      "swdown_step_21_ci95": [
+        6.043567,
+        11.491572
+      ],
+      "swdown_step_20_W_m2": -1.144034,
+      "swdown_step_20_ci95": [
+        -2.705174,
+        0.417107
+      ],
+      "swdown_step_difference_W_m2": 9.911603,
+      "headline": {
+        "swdown_step_2.1_W_m2": 8.76757,
+        "swdown_step_2.1_ci95": [
+          6.043567,
+          11.491572
+        ],
+        "swdown_step_2.1_p": 0.0,
+        "swdown_step_2.0_W_m2": -1.144034,
+        "swdown_step_2.0_ci95": [
+          -2.705174,
+          0.417107
+        ],
+        "swdown_step_2.0_status": "ok",
+        "swdown_step_difference_W_m2": 9.911603,
+        "swdown_step_difference_ci95": [
+          6.661226,
+          13.16198
+        ],
+        "swdown_step_difference_p": 0.0,
+        "swdown_step_difference_status": "ok",
+        "soil_step_difference_mm": -6.58577,
+        "soil_step_difference_status": "ok",
+        "soil_trend_2.1_full_mm_per_decade": -6.182072,
+        "soil_trend_2.1_full_p": 0.082418,
+        "soil_trend_2.1_common_mm_per_decade": -6.182072,
+        "soil_trend_2.1_common_p": 0.082418,
+        "soil_trend_2.0_common_mm_per_decade": -3.495075,
+        "soil_trend_2.0_common_p": 0.306222,
+        "soil_trend_difference_common_mm_per_decade": -2.686996,
+        "soil_trend_difference_common_p": 0.632661,
+        "common_window": [
+          "2000-01",
+          "2014-12"
+        ]
+      },
+      "figure": "../demo/artifact_control.png",
+      "reading": "Incoming solar radiation steps up only in GLDAS-2.1's forcing at 2010-08, and evaporation responds only in 2.1. The 2011-2013 soil-water dip appears in both versions, deeper in 2.1: the forcing change exaggerated a real dip into an apparent long-term decline."
+    },
+    "fldas": {
+      "dataset": "FLDAS_NOAH01_C_GL_M v001 (Noah 3.6.1, MERRA-2 + CHIRPS forcing), doi:10.5067/5NHC22T9375G",
+      "window": [
+        "2003-01-01",
+        "2024-12-01"
+      ],
+      "aggregate_slope_mm_per_decade": 5.028795563929707,
+      "aggregate_ci95": [
+        -1.5835151762849424,
+        11.641106304144357
+      ],
+      "aggregate_p": 0.13543804091208192,
+      "share_area_wetting": 0.02840186759634132,
+      "share_area_drying": 0.006549381666567815,
+      "weights": "true land area of valid cells (area_km2__soil_water_0_200cm)",
+      "regions": {
+        "up": [
+          {
+            "n_tiles": 24,
+            "area_km2": 288707.4244203128,
+            "centroid_lat": -6.272167431578572,
+            "centroid_lon": 33.36864863104645,
+            "bbox": [
+              30.0,
+              -9.0,
+              38.0,
+              -2.0
+            ],
+            "median_slope_per_decade": 50.17257122039953,
+            "median_slope_pct_per_decade": 7.376366223184441
+          },
+          {
+            "n_tiles": 8,
+            "area_km2": 66501.54060277398,
+            "centroid_lat": 47.74160775593444,
+            "centroid_lon": 104.74635413086494,
+            "bbox": [
+              102.0,
+              46.0,
+              107.0,
+              49.0
+            ],
+            "median_slope_per_decade": 16.1334048364468,
+            "median_slope_pct_per_decade": 6.40810202599714
+          },
+          {
+            "n_tiles": 5,
+            "area_km2": 44393.49884182916,
+            "centroid_lat": 44.09594800003701,
+            "centroid_lon": 129.89392200005554,
+            "bbox": [
+              128.0,
+              43.0,
+              132.0,
+              45.0
+            ],
+            "median_slope_per_decade": 77.70660486566935,
+            "median_slope_pct_per_decade": 14.535297566447237
+          },
+          {
+            "n_tiles": 5,
+            "area_km2": 18589.86524065407,
+            "centroid_lat": 72.5,
+            "centroid_lon": 115.49999999999999,
+            "bbox": [
+              113.0,
+              72.0,
+              118.0,
+              73.0
+            ],
+            "median_slope_per_decade": 46.61129690330355,
+            "median_slope_pct_per_decade": 6.821396682140569
+          }
+        ],
+        "down": [
+          {
+            "n_tiles": 12,
+            "area_km2": 117799.98237154448,
+            "centroid_lat": 35.812207909599024,
+            "centroid_lon": 7.031537315196229,
+            "bbox": [
+              4.0,
+              34.0,
+              10.0,
+              37.0
+            ],
+            "median_slope_per_decade": -37.23236886774493,
+            "median_slope_pct_per_decade": -6.220854834898223
+          },
+          {
+            "n_tiles": 9,
+            "area_km2": 82305.92155435654,
+            "centroid_lat": 42.243512306119484,
+            "centroid_lon": 67.72488207928711,
+            "bbox": [
+              66.0,
+              39.0,
+              69.0,
+              45.0
+            ],
+            "median_slope_per_decade": -27.998232059261582,
+            "median_slope_pct_per_decade": -5.543810800074205
+          },
+          {
+            "n_tiles": 7,
+            "area_km2": 40894.377850130695,
+            "centroid_lat": 60.63508083376407,
+            "centroid_lon": -75.71356251268818,
+            "bbox": [
+              -78.0,
+              59.0,
+              -74.0,
+              62.0
+            ],
+            "median_slope_per_decade": -23.93050285031346,
+            "median_slope_pct_per_decade": -3.015567734858761
+          },
+          {
+            "n_tiles": 6,
+            "area_km2": 58450.360179815994,
+            "centroid_lat": -37.98749977920137,
+            "centroid_lon": -71.83336718229104,
+            "bbox": [
+              -73.0,
+              -40.0,
+              -71.0,
+              -36.0
+            ],
+            "median_slope_per_decade": -34.985288861982596,
+            "median_slope_pct_per_decade": -4.761072765942133
+          },
+          {
+            "n_tiles": 5,
+            "area_km2": 45720.67212099847,
+            "centroid_lat": -42.291084262978195,
+            "centroid_lon": -68.09808080874731,
+            "bbox": [
+              -69.0,
+              -44.0,
+              -67.0,
+              -41.0
+            ],
+            "median_slope_per_decade": -12.20066703098064,
+            "median_slope_pct_per_decade": -3.018102091045106
+          }
+        ]
+      }
+    },
+    "grace": {
+      "product": "JPL GRACE and GRACE-FO MASCON RL06.3Mv04 CRI",
+      "window": [
+        "2003-01",
+        "2024-12"
+      ],
+      "land_area_share_fdr_significant": 0.398897,
+      "land_area_share_negative_slope": 0.548355,
+      "vs_fldas_soil_water": {
+        "window": [
+          "2003-01",
+          "2024-12"
+        ],
+        "sign_match_area_sig_either": 0.609413,
+        "spearman_slopes": 0.258595,
+        "hotspots": {
+          "NW India": {
+            "grace_mean_slope_mm_decade": -203.585383,
+            "model_mean_slope_mm_decade": 34.313288,
+            "n_grace_sig": 8,
+            "n_boxes": 12
+          },
+          "North China Plain": {
+            "grace_mean_slope_mm_decade": -108.354274,
+            "model_mean_slope_mm_decade": 9.384604,
+            "n_grace_sig": 1,
+            "n_boxes": 9
+          },
+          "California Central Valley": {
+            "grace_mean_slope_mm_decade": -108.420372,
+            "model_mean_slope_mm_decade": -3.610006,
+            "n_grace_sig": 2,
+            "n_boxes": 5
+          },
+          "Middle East (Tigris-Euphrates / Iran)": {
+            "grace_mean_slope_mm_decade": -102.931954,
+            "model_mean_slope_mm_decade": 3.389667,
+            "n_grace_sig": 14,
+            "n_boxes": 31
+          },
+          "Caspian Sea region (also Caspian sea-level decline)": {
+            "grace_mean_slope_mm_decade": -282.359046,
+            "model_mean_slope_mm_decade": -0.396567,
+            "n_grace_sig": 10,
+            "n_boxes": 16
+          }
+        },
+        "note": "GRACE measures total water storage (incl. groundwater, surface water, ice); compare signs, not sizes"
+      }
+    }
+  },
+  "cross_checks": {
+    "precip_chirps_fldas": {
+      "window": [
+        "2003-01",
+        "2024-12"
+      ],
+      "n_tiles": 15690,
+      "gldas_fdr_sig_area_share": 0.02399178003829864,
+      "fldas_fdr_sig_area_share": 0.012317139887039546,
+      "sign_match_area_sig_either": 0.874943266075783,
+      "sign_match_area_sig_both": 0.9424342641322084,
+      "n_sig_both": 40,
+      "spearman_slopes_all": 0.4948695658139976,
+      "sign_match_area_all": 0.6946653056756065
+    }
   }
 }

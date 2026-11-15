@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-15T17:22:31Z",
+ "generated_utc": "2026-11-15T20:21:17Z",
  "generator": "scripts/build_cards.py",
  "dataset": {
   "short_name": "GLDAS_NOAH025_M",
@@ -50,6 +50,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "pass",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows wetting in 100% of this region's 48 tiles (65% individually significant at p < 0.05); median trend +1.0 mm/month per decade vs +3.6 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "pass",
      "detail": "1 source(s): 1 agree, 0 partly agree, 0 disagree."
@@ -60,7 +65,7 @@
     "decision": "Which millet and sorghum varieties and sowing windows to recommend to smallholders for the coming rainy season",
     "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative; a detectable wetting trend supports testing longer-cycle varieties, while year-to-year variability still argues for drought-hedged recommendations."
    },
-   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
    "literature": [
     {
      "citation": "Biasutti, M. (2019). Rainfall trends in the African Sahel: Characteristics, processes, and causes. WIREs Climate Change, 10(4), e591.",
@@ -120,6 +125,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "pass",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows wetting in 100% of this region's 143 tiles (68% individually significant at p < 0.05); median trend +4.6 mm/month per decade vs +6.5 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "pass",
      "detail": "1 source(s): 1 agree, 0 partly agree, 0 disagree."
@@ -130,7 +140,7 @@
     "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
     "why_it_matters": "A detectable wetting trend changes both sides of the ledger: more recharge opportunity, but also more flood-season water to route safely through cities."
    },
-   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
    "literature": [
     {
      "citation": "Wu, K., Liu, H., Zhao, L., Lin, Y., & Yang, Z. (2022). The strengthening relationship between summer rainfall over North China and PDO since the mid-2000s. Frontiers in Earth Science, 10, 957940.",
@@ -188,6 +198,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "pass",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows wetting in 100% of this region's 32 tiles (75% individually significant at p < 0.05); median trend +8.9 mm/month per decade vs +7.7 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "pass",
      "detail": "3 source(s): 1 agree, 2 partly agree, 0 disagree."
@@ -198,7 +213,7 @@
     "decision": "Whether to invest in flood drainage and rain-fed kharif crop advisories, rather than only drought relief, in a historically arid district",
     "why_it_matters": "Infrastructure in arid districts was designed for scarcity; a detectable wetting trend means more monsoon water arriving where drainage and crop calendars were not planned for it."
    },
-   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
    "literature": [
     {
      "citation": "Joseph, L., Skliris, N., Dey, D., Marsh, R., Hirschi, J., et al. (2024). Increased Summer Monsoon Rainfall Over Northwest India Caused by Hadley Cell Expansion and Indian Ocean Warming. Geophysical Research Letters, 51, e2024GL108829.",
@@ -268,6 +283,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "pass",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows drying in 100% of this region's 61 tiles (56% individually significant at p < 0.05); median trend -10.3 mm/month per decade vs -7.6 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "partial",
      "detail": "2 source(s): 0 agree, 2 partly agree, 0 disagree."
@@ -278,7 +298,7 @@
     "decision": "How much water to allocate to irrigation and cities next season, and whether reservoir and desalination investments assume a drier baseline",
     "why_it_matters": "If the drying is a persistent trend rather than a run of bad years, water rights and reservoir rules that assume a return to 20th-century rainfall will over-allocate water."
    },
-   "evidence_level": "supported: passes 2 of 3 extra checks",
+   "evidence_level": "supported: passes 3 of 4 extra checks",
    "literature": [
     {
      "citation": "Garreaud, R. D., Boisier, J. P., Rondanelli, R., Montecinos, A., Sepulveda, H. H., & Veloso-Aguila, D. (2020). The Central Chile Mega Drought (2010-2018): A climate dynamics perspective. International Journal of Climatology, 40(1), 421-439.",
@@ -343,6 +363,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "partial",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows drying in 92% of this region's 24 tiles (25% individually significant at p < 0.05); median trend -10.1 mm/month per decade vs -25.7 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "pass",
      "detail": "3 source(s): 1 agree, 2 partly agree, 0 disagree."
@@ -353,7 +378,7 @@
     "decision": "Which sowing windows and second-crop (safrinha) maize plantings to treat as high-risk in climate-risk zoning",
     "why_it_matters": "The second crop depends on rain at the end of the wet season; a detectable drying trend argues for shorter-cycle varieties or more conservative planting calendars."
    },
-   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "evidence_level": "supported: passes 3 of 4 extra checks",
    "literature": [
     {
      "citation": "Espinoza, J. C., Ronchail, J., Marengo, J. A., & Segura, H. (2019). Contrasting North-South changes in Amazon wet-day and dry-day frequency and related atmospheric features (1981-2017). Climate Dynamics, 52, 5413-5430.",
@@ -423,6 +448,11 @@
      "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
     },
     {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
+     "status": "partial",
+     "detail": "Over 2003-2024, CHIRPS-based precipitation shows drying in 100% of this region's 18 tiles (0% individually significant at p < 0.05); median trend -3.9 mm/month per decade vs -15.8 in GLDAS over the same years."
+    },
+    {
      "check": "Agreement with independent literature",
      "status": "partial",
      "detail": "2 source(s): 0 agree, 2 partly agree, 0 disagree."
@@ -433,7 +463,7 @@
     "decision": "How much reservoir drawdown to allow for electricity generation versus holding storage against dry years",
     "why_it_matters": "Zambia gets most of its electricity from hydropower; operating rules that assume past rainfall can empty reservoirs when a drying trend co-occurs with a dry year."
    },
-   "evidence_level": "supported: passes 2 of 3 extra checks",
+   "evidence_level": "supported: passes 2 of 4 extra checks",
    "literature": [
     {
      "citation": "Hua, W., Zhou, L., Chen, H., Nicholson, S. E., Raghavendra, A., & Jiang, Y. (2016). Possible causes of the Central Equatorial African long-term drought. Environmental Research Letters, 11, 124002.",
@@ -471,34 +501,38 @@
    "region_id": null,
    "title": "Paradox Earth caught a false trend",
    "place": "Global land: soil water (GLDAS-2.1 Noah)",
-   "headline": "Paradox Earth caught a false trend: the apparent soil-water decline is a level shift around 2010-08 and 2024-07 that lines up with documented changes in the model's radiation input, not a trend, so it is withdrawn.",
+   "headline": "Paradox Earth caught a false trend: the apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around 2010-08 and 2024-07) and disappears in a consistently forced NASA product (FLDAS, 2003-2024: +5.0 mm/decade, p = 0.14, no detectable trend).",
    "numbers": {
     "median_pct_per_decade": null,
     "median_slope_per_decade": null,
     "area_km2": null,
     "n_tiles": null,
-    "share_tiles_fdr_significant": null
+    "share_tiles_fdr_significant": null,
+    "fldas_soil_water_mm_per_decade": 5.03,
+    "fldas_soil_water_p": 0.135,
+    "swdown_step_gldas21_W_m2": 8.77,
+    "swdown_step_gldas20_W_m2": -1.14
    },
    "robustness": [
     {
-     "check": "FDR-corrected significance",
-     "status": "not_run",
-     "detail": "Not graded: the series failed the homogeneity check first, so a trend p-value would be meaningless."
-    },
-    {
      "check": "Homogeneity (break-point) check",
      "status": "fail",
-     "detail": "Level shift detected around 2010-08 and 2024-07. Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window."
+     "detail": "Level shift detected around 2010-08 and 2024-07. Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window. README_GLDAS2 documents an apparent shift in the AGRMET radiation climatology (section 1.5.3) and degraded WWMCA radiation from mid-2024 (section 1.2.3); the detected steps line up with both."
     },
     {
-     "check": "Stability across time windows",
-     "status": "not_run",
-     "detail": "Not graded: a step change makes any window's slope depend on where the window sits relative to the break."
-    },
-    {
-     "check": "Agreement with independent documentation",
+     "check": "Same model, different forcing (GLDAS-2.0 control)",
      "status": "fail",
-     "detail": "README_GLDAS2 documents an apparent shift in the AGRMET radiation climatology (section 1.5.3; detected here as a step at 2010-08) and degraded WWMCA radiation from mid-2024 (section 1.2.3; step at 2024-07). The 'trend' lines up with these documented input changes."
+     "detail": "GLDAS-2.1 vs GLDAS-2.0: same Noah model and grid, different forcing, 2000-2014. At 2010-08 incoming solar radiation in the 2.1 forcing steps by +8.8 W/m² (95% CI +6.0 to +11.5); in 2.0 the step is -1.1 W/m² (95% CI -2.7 to +0.4). Incoming solar radiation steps up only in GLDAS-2.1's forcing at 2010-08, and evaporation responds only in 2.1. The 2011-2013 soil-water dip appears in both versions, deeper in 2.1: the forcing change exaggerated a real dip into an apparent long-term decline. Soil-water trend over 2000-2014: -6.2 mm/decade in 2.1 (p = 0.08) vs -3.5 in 2.0 (p = 0.31)."
+    },
+    {
+     "check": "Consistently forced product (NASA FLDAS, 2003-2024)",
+     "status": "fail",
+     "detail": "FLDAS (Noah driven by MERRA-2 + CHIRPS, no radiation-forcing switch): global land soil water +5.0 mm/decade (95% CI -1.6 to +11.6, p = 0.14) - no detectable global trend, and no decline. After FDR correction 2.8% of land is detectably wetting and 0.7% drying."
+    },
+    {
+     "check": "Observations (GRACE/GRACE-FO)",
+     "status": "partial",
+     "detail": "JPL GRACE and GRACE-FO MASCON RL06.3Mv04 CRI, 2003-2024: FDR-significant water-storage trends over 40% of land. GRACE weighs all water (groundwater, lakes, ice), so it cannot confirm or refute a soil-only trend. Where either is significant, GRACE and FLDAS soil water agree in sign over 61% of the area (Spearman 0.26). The largest GRACE declines are groundwater and irrigation hotspots the land model does not represent (NW India GRACE -204 vs model +34 mm/decade; North China Plain GRACE -108 vs model +9 mm/decade; California Central Valley GRACE -108 vs model -4 mm/decade)."
     }
    ],
    "user": {
@@ -519,16 +553,111 @@
      "url_or_doi": "https://doi.org/10.1175/BAMS-85-3-381",
      "agrees": "partly",
      "note": "Describes GLDAS as a model driven by changing observation-based forcing, which is why its outputs need homogeneity checks before trend analysis."
+    },
+    {
+     "citation": "Qin, T., Feng, J., Zhang, X., Li, C., Fan, J., Zhang, C., Dong, B., Wang, H., & Yan, D. (2023). Continued decline of global soil moisture content, with obvious soil stratification and regional difference. Science of the Total Environment, 864, 160982.",
+     "url_or_doi": "https://doi.org/10.1016/j.scitotenv.2022.160982",
+     "agrees": false,
+     "note": "Reports a GLDAS-Noah soil-moisture decline (0-200 cm, 2000-2020); our checks attribute the post-2010 part largely to forcing changes. Different question and method: they analyse the model record as given, we test it for forcing breaks first."
     }
    ],
    "caveats": [
-    "Withdrawn as a trend: the soil-water series is shown only as an example of a data artefact.",
-    "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break."
+    "Withdrawn as a trend: the GLDAS-2.1 soil-water series is shown only as an example of a data artefact.",
+    "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; what is withdrawn is the long-term decline.",
+    "FLDAS and GLDAS share the Noah land model, so FLDAS is independent in forcing, not in model physics.",
+    "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break and against CHIRPS."
    ],
    "breakpoints": [
     "2010-08",
     "2024-07"
-   ]
+   ],
+   "figure": "../demo/artifact_control.png"
+  },
+  {
+   "id": "observation-nw-india-groundwater",
+   "kind": "observation",
+   "region_id": null,
+   "title": "GRACE sees what the soil model cannot",
+   "place": "Northwest India and eastern Pakistan (Punjab, Haryana, Rajasthan; GRACE hotspot box 24-34°N, 68-80°E)",
+   "headline": "Over 2003-2024, GRACE/GRACE-FO satellite gravity shows water storage over northwest India falling by about 204 mm per decade (mean of 12 3-degree boxes, 8 significant after false-discovery correction), while NASA's FLDAS land model, which has no groundwater pumping, shows soil water changing by +34 mm per decade. The missing water lines up with the groundwater depletion reported for this region in the literature.",
+   "numbers": {
+    "median_pct_per_decade": null,
+    "median_slope_per_decade": null,
+    "area_km2": 1163864.0,
+    "n_tiles": null,
+    "share_tiles_fdr_significant": 0.667,
+    "grace_mean_slope_mm_per_decade": -203.6,
+    "model_mean_slope_mm_per_decade": 34.3,
+    "n_boxes": 12,
+    "n_boxes_grace_fdr_significant": 8,
+    "box_deg": 3
+   },
+   "robustness": [
+    {
+     "check": "GRACE significance (FDR, per 3-degree box)",
+     "status": "partial",
+     "detail": "8 of 12 3-degree boxes (67%) have GRACE/GRACE-FO water-storage trends that are significant after Benjamini-Hochberg FDR correction, 2003-2024; 8 of those 8 are declines. 8 of the significant boxes lie in the glacier-influenced zone (High Mountain Asia), so part of their signal may be glacier mass loss leaking into the mascons rather than groundwater. Not significant: 4 boxes, centred at 25.5°N."
+    },
+    {
+     "check": "Disagreement with the land model (NASA FLDAS soil water)",
+     "status": "pass",
+     "detail": "Box mean: GRACE -204 mm/decade vs NASA FLDAS soil water (0-200 cm) +34 mm/decade - opposite signs. The model shows a rise in 12 of 12 boxes (0 FDR-significant). The land model has no groundwater pumping or irrigation, so a decline GRACE sees and the soil model does not points to storage the model does not track (groundwater, or glacier ice near the Himalaya). Globally, GRACE and FLDAS soil water agree in sign over 61% of the area where either is significant."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "pass",
+     "detail": "2 source(s): 2 agree, 0 partly agree, 0 disagree."
+    },
+    {
+     "check": "Second GRACE solution (e.g. CSR or GSFC mascons)",
+     "status": "not_run",
+     "detail": "Only the JPL GRACE and GRACE-FO MASCON RL06.3Mv04 CRI solution was analysed."
+    }
+   ],
+   "user": {
+    "who": "A groundwater regulator or irrigation planner in Punjab-Haryana (e.g. a state groundwater authority)",
+    "decision": "Whether to set or tighten groundwater extraction limits and crop-diversification incentives for over-exploited blocks",
+    "why_it_matters": "Soil-moisture and rainfall products can look normal or even wet here while the aquifer is drawn down; an independent satellite measure of total water storage is the check that catches what those products cannot see."
+   },
+   "evidence_level": "observed (satellite gravity); cause not identified by this analysis",
+   "literature": [
+    {
+     "citation": "Rodell, M., Velicogna, I., & Famiglietti, J. S. (2009). Satellite-based estimates of groundwater depletion in India. Nature, 460, 999-1002.",
+     "url_or_doi": "https://doi.org/10.1038/nature08238",
+     "agrees": true,
+     "note": "GRACE-based groundwater depletion over Rajasthan, Punjab and Haryana (incl. Delhi), 2002-2008, attributed there to irrigation pumping."
+    },
+    {
+     "citation": "Rodell, M., Famiglietti, J. S., Wiese, D. N., Reager, J. T., Beaudoing, H. K., Landerer, F. W., & Lo, M.-H. (2018). Emerging trends in global freshwater availability. Nature, 557, 651-659.",
+     "url_or_doi": "https://doi.org/10.1038/s41586-018-0123-1",
+     "agrees": true,
+     "note": "Global GRACE trends 2002-2016; lists northern India among the largest water-storage declines, linked there to groundwater withdrawal."
+    }
+   ],
+   "caveats": [
+    "GRACE mascons are a few hundred kilometres across; the box mean mixes irrigated plains with desert and foothills.",
+    "The northern boxes border the Himalaya; glacier mass loss can leak into them, so not all of the decline need be groundwater.",
+    "GRACE measures all water storage (groundwater, surface water, soil, snow and ice); this analysis does not separate them, and the cause is taken from the literature, not tested here.",
+    "Only one GRACE solution (JPL mascons) was analysed."
+   ],
+   "centroid": [
+    29.0,
+    76.0
+   ],
+   "bbox": [
+    68,
+    24,
+    80,
+    34
+   ],
+   "source": {
+    "grace_product": "JPL GRACE and GRACE-FO MASCON RL06.3Mv04 CRI",
+    "window": [
+     "2003-01",
+     "2024-12"
+    ],
+    "model": "NASA FLDAS soil water 0-200 cm"
+   }
   },
   {
    "id": "local-placeholder",
@@ -565,6 +694,11 @@
     },
     {
      "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "not_run",
+     "detail": "Waiting for the team to choose a local region."
+    },
+    {
+     "check": "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
      "status": "not_run",
      "detail": "Waiting for the team to choose a local region."
     },

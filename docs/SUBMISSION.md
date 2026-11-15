@@ -3,9 +3,10 @@
 Ready-to-paste text for each field of the NASA Space Apps Challenge 2026 project submission form.
 Challenge: **Be An Earth System Trend Detective!**
 
-Every number below comes from `site/data/meta.json` and `site/data/cards.json`, which `scripts/export_site.py` and
-`scripts/build_cards.py` export from `outputs_global_v2/`. If the pipeline is re-run, re-check the numbers before
-pasting. Lines marked **[TEAM]** must be filled in or confirmed by the team, not by a tool.
+Every number below comes from `site/data/meta.json`, `site/data/cards.json` and `site/data/pinn.json`, which
+`scripts/export_site.py`, `scripts/build_cards.py` and `scripts/pinn_report.py` export from `outputs_global_v2/`,
+`outputs_fldas/`, `outputs_artifact/`, `outputs_grace/` and `outputs_pinn/`. If the pipeline is re-run, re-check the
+numbers before pasting. Lines marked **[TEAM]** must be filled in or confirmed by the team, not by a tool.
 
 ---
 
@@ -29,9 +30,10 @@ pasting. Lines marked **[TEAM]** must be filled in or confirmed by the team, not
       average looks flat. A few regions are not." (not "The planet is changing"); "shows a detectable wetting/drying
       trend (2000-2025)" (not "is getting wetter/drier"); no "opposite trends cancel in the global mean"; the
       soil-water card should say the shifts "line up with" forcing changes, not "caused by".
-- [ ] **Check counts.** Cards say "3 of 3 independent checks" while the explorer badge says "4 / 4". The FDR row is
-      the selection criterion and passes by construction, and the window/neighbour checks reuse the same data.
-      Use one count ("3 of 3 extra checks, plus FDR selection") and drop "independent".
+- [ ] **Check counts.** Region cards now have 4 extra checks plus FDR selection (windows, neighbours, CHIRPS via
+      FLDAS, literature): Sahel, northern China and NW India pass 4 of 4; southern Andes and SW Amazon 3 of 4;
+      middle Zambezi 2 of 4. Make sure the explorer badge, slides and video use the same "N of 4 extra checks"
+      count (the FDR row passes by construction, so it is not counted).
 - [ ] **References and AI line on the slides.** Slide 7 needs a short reference list (or "full list in the
       explorer's case files / README") and an AI-acknowledgement line.
 - [ ] **AI label on slides.** The video has a visible "AI-assisted production" label and the site has an "AI
@@ -73,10 +75,15 @@ trend (−0.88 mm/month per decade, p = 0.08). Underneath, 4.3% of land area sho
 Card. Each card has a robustness checklist, published literature, caveats and a named user, such as a
 hydropower planner on the Zambezi or an extension office in the Sahel. The detective also checks itself: it
 caught and withdrew a dramatic soil-water decline whose level shifts line up with documented changes in the
-model's radiation input. A 3D explorer lets anyone click a place and read its case file.
+model's radiation input; GLDAS-2.0 and NASA FLDAS back that up, and GRACE satellite gravity shows where the
+land model misses groundwater losses. Where either is
+significant, CHIRPS-based precipitation from NASA FLDAS agrees with the trend sign over 87% of the area. A
+physics-informed forecast lab emulates the GLDAS land water store, with skill +0.2 over a linear model with the
+same inputs (emulation of a NASA model, not a real-world forecast).
+A 3D explorer lets anyone click a place and read its case file.
 ```
 
-(~155 words.)
+(~215 words.)
 
 ---
 
@@ -121,9 +128,11 @@ globally, and it does not identify causes. It reports statistical trends in a GP
 
 Coherent clusters become Discovery Cards. Each card lists the trend, the area, a robustness checklist, published
 literature that agrees or only partly agrees, caveats, and a named user with a concrete decision. FDR
-significance is how regions are selected, so it passes by construction; the graded checks are stability across
-overlapping time windows, agreement between two neighbour definitions, and agreement with the literature.
-Example cards:
+significance is how regions are selected, so it passes by construction; the four graded checks are stability
+across overlapping time windows, agreement between two neighbour definitions, agreement with an independent
+precipitation product (CHIRPS, via NASA FLDAS), and agreement with the literature. The Central Sahel, northern
+China and northwest India pass all four; the southern Andes and southwestern Amazon pass 3 of 4; the middle
+Zambezi 2 of 4. Example cards:
  • Central Sahel (Chad, eastern Niger), wetting: an agricultural extension office choosing millet/sorghum
    varieties and sowing windows.
  • Northern and northeastern China and eastern Mongolia (38–51°N), wetting: a water-resources bureau in Inner
@@ -145,6 +154,49 @@ Our first headline was a 26-year global decline in soil water. Our own break tes
 level shifts, at 2010-08 and 2024-07. Their timing lines up with documented changes in the radiation forcing
 that drives the GLDAS model (GES DISC README_GLDAS2). Within the one consistent period, 2012-01 to 2024-06, the global decline
 is not significant. We withdrew the trend and kept the case as a card: a step in the input data is not a trend.
+
+SOIL WATER: THE DECLINE THAT WASN'T
+
+A published study (Qin et al. 2023) reported a GLDAS-Noah soil-moisture decline over 2000–2020. Our analysis
+indicates that the post-2010 part of the GLDAS-2.1 decline lines up with documented forcing changes. Three checks:
+ • Artifact control. GLDAS-2.0 runs the same Noah model on the same grid with different (Princeton) forcing. Over
+   2000–2014, incoming solar radiation steps up at 2010-08 by +8.8 W/m² (95% CI 6.0 to 11.5) in GLDAS-2.1 but by
+   −1.1 W/m² (−2.7 to +0.4) in 2.0, and evaporation responds only in 2.1. The 2011–2013 soil-water dip appears in
+   both versions, deeper in 2.1: the forcing change exaggerated a real dip into an apparent decline.
+ • A second NASA land model. NASA FLDAS (MERRA-2 + CHIRPS forcing), 2003–2024: global land soil water
+   +5.0 mm/decade (95% CI −1.6 to +11.6, p = 0.14), so no detectable trend; 2.8% of land area shows detectable
+   wetting and 0.7% detectable drying.
+ • GRACE/GRACE-FO hotspots. Satellite gravity (total water storage, including groundwater) shows several of its
+   largest declines in groundwater and irrigation hotspots, which the land model does not simulate: northwest
+   India −204 mm/decade vs +34 in the FLDAS soil model; North China Plain −108 vs +9; California Central Valley
+   −108 vs −4.
+ Figure in the repo: demo/artifact_control.png.
+
+INDEPENDENT DATA CHECKS
+
+GLDAS-2.1 precipitation is GPCP-based, so we re-ran the same pipeline on NASA FLDAS, whose precipitation comes from
+CHIRPS (a separate satellite-plus-gauge product), over 2003–2024. Where either product has an FDR-significant
+trend, the two agree in sign over 87% of that land area, and over 94% where both do. The tile-by-tile rank
+correlation of all slopes is moderate (Spearman 0.49), so the products agree on direction where trends are
+detectable, not on exact size. GRACE/GRACE-FO (JPL mascons) shows FDR-significant storage trends over 40% of land;
+where GRACE or FLDAS soil water is significant, they agree in sign over 61% of the area (Spearman 0.26). GRACE
+weighs all water, so it tests signs and patterns, not the size of a soil-only trend.
+
+FORECAST LAB (PHYSICS-INFORMED EMULATOR)
+
+A small CNN emulates next month's change in the GLDAS-2.1 land water store (soil 0–200 cm + snow + canopy; not
+total water storage) at 1°, given the last 6 months and next month's rain and temperature. Its loss adds a
+water-budget penalty λ·(ΔS − (P − ET − R))². Design: train 2012–2019, validate 2020–2021, test 2022-01 to 2024-06;
+the 90°E–180°E region is held out of training; 2024-07 to 2025-05 (degraded radiation forcing) is an
+out-of-regime test; 2 input arms × λ ∈ {0, 0.1, 1, 10} × 5 seeds = 40 runs on a RunPod RTX 4090 (about 1
+GPU-hour). Baselines: persistence, climatological increment and a linear autoregressive model with the same
+inputs; GLDAS's own budget residual (8.5 mm/month) is the truth floor. Results (means over 5 seeds, seed sd
+0.01–0.03; full table in the README): with rain and temperature as inputs and λ ≤ 1, skill against the linear
+model on the storage change is +0.20 to +0.22 on the test months and +0.19 to +0.22 in the held-out region. λ = 1 cuts the model's water-budget residual from 7.5 to 4.2 mm/month with no accuracy loss and
+improves consistency with GLDAS fluxes (7.7 → 6.4 mm/month); λ = 10 collapses skill. Giving the network radiation
+inputs does not help, and that arm loses more skill after the 2024 radiation-forcing change. This is emulation
+skill against a NASA model, not real-world forecast skill. Figures in the repo: demo/pinn_tradeoff.png (budget
+residual vs skill for each λ and seed) and demo/pinn_skill_map.png (per-cell skill vs the linear model).
 
 HOW IT WORKS
 
@@ -185,10 +237,9 @@ of regional trends in opposite directions, and that a trend line needs checking 
 TOOLS, LANGUAGES, LIBRARIES
 
 Python 3.12: NumPy, pandas, SciPy, xarray, netCDF4, statsmodels, arch, PySAL (esda, libpysal), scikit-learn,
-matplotlib, pytest, earthaccess (NASA Earthdata download), pypdf. Web: HTML, CSS and JavaScript with globe.gl
-(three.js) for the 3D globe; fonts from Google Fonts. Build: headless Google Chrome (slides to PDF), FFmpeg
-(video), GitHub Pages (hosting). PyTorch is used by an experimental water-balance forecaster in the repo; it
-did not contribute to any result shown here.
+matplotlib, pytest, earthaccess (NASA Earthdata download), pypdf, PyTorch (forecast lab only). Web: HTML, CSS and
+JavaScript with globe.gl (three.js) for the 3D globe; fonts from Google Fonts. Build: headless Google Chrome
+(slides to PDF), FFmpeg (video), GitHub Pages (hosting). GPU: one RunPod RTX 4090 for the forecast lab.
 ```
 
 ---
@@ -206,22 +257,29 @@ AI coding assistants were used in this project, as follows:
  • Code: AI coding assistants helped write, debug and review Python code for the data pipeline, statistical
    tests, spatial statistics and export scripts, and the HTML/CSS/JavaScript for the web explorer.
    [TEAM: confirm, or rewrite to what is true] The team reviewed, ran and tested the code.
- • Statistical calibration and validation: AI assistants helped write and run Monte Carlo simulations used to
-   check the false-positive rate of the trend and variance tests, and helped run validation checks (quality
-   control, break tests, window stability).
+ • Statistical calibration and validation: AI assistants helped design, write and run the Monte Carlo
+   simulations used to check the false-positive rate of the trend and variance tests, and helped run validation
+   checks (quality control, break tests, window stability, the GLDAS-2.0 artifact control, the FLDAS/CHIRPS
+   precipitation cross-check and the GRACE comparison).
+ • Forecast lab: AI assistants helped design the physics-informed emulator experiment (splits, held-out region,
+   out-of-regime test, baselines, seeds), write the training code, and run the 40 training runs on a rented GPU
+   (RunPod RTX 4090). [TEAM: confirm, or rewrite to what is true] The team reviewed the design and the results.
  • Demo materials: AI assistants helped generate the presentation slides, the 30-second video and the project
    website. The video carries a visible "AI-assisted production" label. The website has an "AI disclosure"
    section. [TEAM: confirm the slides carry an AI-assistance note before submitting.]
  • Writing: AI assistants helped draft and edit text, including this project page, the README, the Discovery
    Card text (user stories, literature notes, caveats) and the slide and video copy.
 
-What AI did NOT produce: every map, chart and number is computed from NASA GLDAS-2.1 data by our code. No
+What AI did NOT produce: every map, chart and number is computed by our code from NASA data (GLDAS-2.1,
+GLDAS-2.0, FLDAS, GRACE/GRACE-FO). No
 AI-generated photographs or illustrations are used; the figures are data plots. The citations on the cards
 were checked against their DOI records (authors, journal, volume, pages). [TEAM: confirm that you have read
 the cited papers' abstracts and agree with each card's "agrees / partly agrees" label.]
 
 Idea and design:
-[TEAM — complete and confirm, or rewrite truthfully]
+[TEAM — complete and confirm, or rewrite truthfully. Make it consistent with the bullets above: AI helped
+design the calibration simulations and the forecast-lab experiment, so "design" here should mean the project
+idea and overall approach, or say so explicitly.]
 "The project idea and design, set out in the Paradox Earth project manifest
 (docs/Paradox_Earth_Project_Manifest_v3.pdf), were conceived by our team members:
 ______________________________. AI was not used to come up with the idea of how to solve the challenge."
@@ -250,8 +308,8 @@ Variables used
    This is the headline variable. It is converted from kg m⁻² s⁻¹ to mm/month.
  • SoilMoi0_10cm_inst, SoilMoi10_40cm_inst, SoilMoi40_100cm_inst, SoilMoi100_200cm_inst: summed to soil water
    0–200 cm. Withdrawn as a 2000–2025 trend (see below); analysed only in 2012-01 to 2024-06.
- • Also ingested and quality-checked but not reported as results: SWE_inst, CanopInt_inst, Evap_tavg, Qs_acc,
-   Qsb_acc, Tair_f_inst.
+ • Forecast lab and artifact control: SWE_inst and CanopInt_inst (added to soil water to form the land water
+   store), Evap_tavg, Qs_acc + Qsb_acc (runoff), Tair_f_inst, SWdown_f_tavg and LWdown_f_tavg.
 
 How it is used
 GLDAS-2.1 gives the same gap-free monthly grid over every land surface. Because of that, a trend in Chile and a
@@ -268,6 +326,20 @@ climatology and degraded WWMCA-based radiation from mid-2024. Our break tests fo
 withdrawn.
 
 Caveat: GLDAS-2.1 is model output. Its precipitation is GPCP-based forcing, not an independent rain-gauge record.
+
+Independent checks (NASA data)
+ • GLDAS-2.0 Noah, monthly 0.25° (short name GLDAS_NOAH025_M, version 2.0; Princeton forcing), NASA GES DISC,
+   2000-01 to 2014-12. Same model and grid as GLDAS-2.1, different forcing: the artifact control for the
+   soil-water decline. https://disc.gsfc.nasa.gov/datasets/GLDAS_NOAH025_M_2.0/summary
+ • FLDAS Noah, global monthly 0.1° (FLDAS_NOAH01_C_GL_M, version 001; MERRA-2 + CHIRPS forcing), NASA GES DISC,
+   doi:10.5067/5NHC22T9375G, 2003-01 to 2024-12. Coarsened to 0.5° and run through the same pipeline. Its
+   precipitation (CHIRPS, which enters via the FLDAS forcing) cross-checks the GLDAS-2.1 precipitation trends; its
+   soil water tests the soil-water decline.
+ • GRACE/GRACE-FO JPL mascons RL06.3Mv04 CRI (TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4), NASA PO.DAAC,
+   2003-01 to 2024-12, in 3° boxes. Satellite gravity measures total water storage, so it is used to compare
+   trend signs and to find groundwater/irrigation hotspots the land model does not represent.
+ • Forecast lab: GLDAS-2.1 land water store (soil 0–200 cm + SWE + canopy), P, ET, runoff, air temperature and
+   radiation at 1°, 2012-01 to 2025-05.
 ```
 
 ---
@@ -275,7 +347,8 @@ Caveat: GLDAS-2.1 is model output. Its precipitation is GPCP-based forcing, not 
 ## 8. Space Agency Partner Data
 
 ```
-None. This project uses only NASA data (GLDAS-2.1). No data from Space Apps partner agencies was used.
+None. This project uses only NASA data (GLDAS-2.1, GLDAS-2.0, FLDAS, GRACE/GRACE-FO). CHIRPS precipitation is
+used only as it enters the NASA FLDAS forcing. No data from Space Apps partner agencies was used.
 ```
 
 ---
@@ -352,6 +425,30 @@ LITERATURE ON THE DISCOVERY CARDS
     past decade. Nature, 509, 86–90. doi:10.1038/nature13265
 (The soil-water card also cites references 2 and 3 above.)
 
+INDEPENDENT CHECKS, SOIL WATER AND GROUNDWATER
+24. Beaudoing, H. and M. Rodell, NASA/GSFC/HSL. GLDAS Noah Land Surface Model L4 monthly 0.25 x 0.25 degree
+    V2.0 (GLDAS_NOAH025_M v2.0). Goddard Earth Sciences Data and Information Services Center (GES DISC).
+    Accessed 2026.
+25. McNally, A., NASA/GSFC/HSL. FLDAS Noah Land Surface Model L4 Global Monthly 0.1 x 0.1 degree (MERRA-2 and
+    CHIRPS) (FLDAS_NOAH01_C_GL_M v001). GES DISC. doi:10.5067/5NHC22T9375G. Accessed 2026.
+26. NASA JPL. GRACE and GRACE-FO JPL mascon RL06.3Mv04 CRI (TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4). NASA
+    PO.DAAC. Accessed 2026.
+27. McNally, A., Arsenault, K., Kumar, S., et al. (2017). A land data assimilation system for sub-Saharan Africa
+    food and water security applications. Scientific Data, 4, 170012. doi:10.1038/sdata.2017.12
+28. Funk, C., Peterson, P., Landsfeld, M., et al. (2015). The climate hazards infrared precipitation with
+    stations — a new environmental record for monitoring extremes. Scientific Data, 2, 150066.
+    doi:10.1038/sdata.2015.66
+29. Rodell, M., Velicogna, I., & Famiglietti, J. S. (2009). Satellite-based estimates of groundwater depletion in
+    India. Nature, 460, 999–1002. doi:10.1038/nature08238
+30. Rodell, M., Famiglietti, J. S., Wiese, D. N., Reager, J. T., Beaudoing, H. K., Landerer, F. W., & Lo, M.-H.
+    (2018). Emerging trends in global freshwater availability. Nature, 557, 651–659.
+    doi:10.1038/s41586-018-0123-1
+31. Qin, T., Feng, J., Zhang, X., Li, C., Fan, J., Zhang, C., Dong, B., Wang, H., & Yan, D. (2023). Continued
+    decline of global soil moisture content, with obvious soil stratification and regional difference. Science
+    of the Total Environment, 864, 160982. doi:10.1016/j.scitotenv.2022.160982
+32. Hirschi, M., et al. (2025). Potential of long-term satellite observations and reanalysis product
+    s for characterising soil drying: trends and drought events. Hydrology and Earth System Sciences, 29, 397-425. doi:10.5194/hess-29-397-2025
+
 SOFTWARE (licence)
 Python libraries (requirements.txt and builder scripts):
  • NumPy (BSD-3-Clause) — https://numpy.org
@@ -367,7 +464,7 @@ Python libraries (requirements.txt and builder scripts):
  • pypdf (BSD-3-Clause) — https://github.com/py-pdf/pypdf
  • earthaccess (MIT) — https://github.com/nsidc/earthaccess
  • pytest (MIT) — https://pytest.org
- • PyTorch (BSD-3-Clause) — https://pytorch.org (experimental forecaster only; not used for reported results)
+ • PyTorch (BSD-3-Clause) — https://pytorch.org (forecast lab only; not used for the trend results)
  • PyYAML (MIT) — listed in requirements.txt; not imported by the current code
 Web explorer:
  • globe.gl 2.46.2 (MIT), loaded from cdn.jsdelivr.net; bundles three.js and three-globe (MIT)
@@ -378,6 +475,7 @@ Tools:
  • FFmpeg (LGPL/GPL) — video encoding, https://ffmpeg.org
  • http-server (MIT, via npx) — local preview only
  • GitHub and GitHub Pages — code hosting and website hosting
+ • RunPod (one RTX 4090 GPU pod) — forecast-lab training, about 1 GPU-hour
 Fonts (SIL Open Font License 1.1, served by Google Fonts):
  • IBM Plex Sans and IBM Plex Mono (site and slides)
  • Instrument Serif (site)
@@ -388,6 +486,7 @@ Fonts (SIL Open Font License 1.1, served by Google Fonts):
 AI ASSISTANCE
  • AI coding assistants were used as described in the "Use of Super Intelligence" section.
 
-NASA credit and affiliation: data courtesy of NASA GES DISC. No NASA logos are used. This project is not
+NASA credit and affiliation: data courtesy of NASA GES DISC (GLDAS, FLDAS) and NASA JPL / PO.DAAC
+(GRACE/GRACE-FO). No NASA logos are used. This project is not
 affiliated with or endorsed by NASA.
 ```

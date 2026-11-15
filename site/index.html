@@ -21,8 +21,10 @@
     <span>Paradox Earth</span>
   </a>
   <nav aria-label="Sections">
-    <a href="#explorer">Explorer</a>
-    <a href="#cases">Case files</a>
+    <a href="#explorer" class="nav-explorer">Explorer</a>
+    <a href="#cases"><span class="nav-long">Case files</span><span class="nav-short">Cases</span></a>
+    <a href="#soil" id="navSoil" hidden>Soil<span class="nav-long"> water</span></a>
+    <a href="#lab" id="navLab" hidden><span class="nav-long">Forecast lab</span><span class="nav-short">Lab</span></a>
     <a href="#method">Method<span class="nav-long"> &amp; limits</span></a>
   </nav>
 </header>
@@ -64,11 +66,44 @@
     <div class="section-head">
       <p class="eyebrow">Case files</p>
       <h2 id="casesTitle">Every discovery comes with its own evidence grade</h2>
-      <p class="lede">The detector checks each pattern four ways: does it survive correction for testing thousands of tiles, does it hold in shorter time windows, do two definitions of “neighbour” agree it is a cluster, and does independent research see it too. It reports what passes, and what does not.</p>
+      <p class="lede">Each region is selected by surviving correction for testing thousands of tiles, then checked four more ways: does it hold in shorter time windows, do two definitions of “neighbour” agree it is a cluster, does an independent precipitation product (CHIRPS, via NASA FLDAS) show the same sign, and does independent research see it too. It reports what passes, and what does not.</p>
     </div>
     <div id="caseNotice" class="notice" hidden></div>
     <div id="featured" class="featured"></div>
     <div id="cardGrid" class="card-grid"></div>
+  </section>
+
+  <section id="soil" class="story soil" aria-labelledby="soilTitle" hidden>
+    <div class="section-head">
+      <p class="eyebrow">Soil water</p>
+      <h2 id="soilTitle">The decline that wasn’t</h2>
+      <p class="lede" id="soilLede"></p>
+    </div>
+    <div class="story-grid">
+      <figure class="fig" id="soilFig" hidden>
+        <img id="soilImg" width="1999" height="1125" loading="lazy" decoding="async" alt="">
+        <figcaption id="soilCap"></figcaption>
+      </figure>
+      <div class="steps" id="soilSteps"></div>
+    </div>
+    <div class="btn-row" id="soilLinks"></div>
+  </section>
+
+  <section id="lab" class="story lab" aria-labelledby="labTitle" hidden>
+    <div class="section-head">
+      <p class="eyebrow">Forecast lab</p>
+      <h2 id="labTitle">A physics-informed emulator</h2>
+      <p class="lede" id="labLede"></p>
+    </div>
+    <div class="lab-grid">
+      <div id="labExplain"></div>
+      <div id="labStats"></div>
+    </div>
+    <h3 class="lab-h">Results by input set and physics weight</h3>
+    <div class="table-wrap"><table id="labTable"></table></div>
+    <p class="small muted table-note" id="labNote"></p>
+    <div class="fig-row" id="labFigs"></div>
+    <div class="limits" id="labLimits"></div>
   </section>
 
   <section id="method" class="method" aria-labelledby="methodTitle">
@@ -84,6 +119,10 @@
       <div>
         <h3>Does the answer depend on the time window?</h3>
         <div class="table-wrap"><table id="windowTable"><caption class="sr-only">Global result in different time windows</caption></table></div>
+        <div id="crossBlock" hidden>
+          <h3>Cross-check: an independent precipitation product</h3>
+          <p id="crossText" class="cross"></p>
+        </div>
         <h3>Limits</h3>
         <ul id="caveatList" class="caveats"></ul>
       </div>
@@ -99,7 +138,7 @@
       </div>
       <div>
         <h3>AI disclosure</h3>
-        <p>Code for this site was written with help from an AI coding assistant. Every map, chart and number is computed from the NASA data shown here; the site contains no AI-generated images. Not affiliated with or endorsed by NASA.</p>
+        <p>Code for this site and the analysis pipeline was written with help from an AI coding assistant. Every map, chart and number is computed from the NASA data shown here; the site contains no AI-generated images. Not affiliated with or endorsed by NASA.</p>
       </div>
     </div>
   </section>

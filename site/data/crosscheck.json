@@ -1,0 +1,121 @@
+{
+  "window": [
+    "2003-01",
+    "2024-12"
+  ],
+  "n_tiles": 15690,
+  "gldas_fdr_sig_area_share": 0.02399178003829864,
+  "fldas_fdr_sig_area_share": 0.012317139887039546,
+  "sign_match_area_sig_either": 0.874943266075783,
+  "sign_match_area_sig_both": 0.9424342641322084,
+  "n_sig_both": 40,
+  "spearman_slopes_all": 0.4948695658139976,
+  "sign_match_area_all": 0.6946653056756065,
+  "regions": {
+    "up1": {
+      "n_tiles": 143,
+      "gldas_2003_2024_median_slope": 6.542230372898026,
+      "fldas_chirps_2003_2024_median_slope": 4.571860029286157,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.6783216783216783
+    },
+    "up2": {
+      "n_tiles": 56,
+      "gldas_2003_2024_median_slope": 2.673439722901133,
+      "fldas_chirps_2003_2024_median_slope": 1.1596894182475093,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.8214285714285714
+    },
+    "up3": {
+      "n_tiles": 48,
+      "gldas_2003_2024_median_slope": 3.597605005993266,
+      "fldas_chirps_2003_2024_median_slope": 1.0486175005063458,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.6458333333333334
+    },
+    "up4": {
+      "n_tiles": 32,
+      "gldas_2003_2024_median_slope": 7.744811744598714,
+      "fldas_chirps_2003_2024_median_slope": 8.892178873589668,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.75
+    },
+    "up5": {
+      "n_tiles": 12,
+      "gldas_2003_2024_median_slope": 6.217487518579858,
+      "fldas_chirps_2003_2024_median_slope": 1.9241851393508727,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "up7": {
+      "n_tiles": 9,
+      "gldas_2003_2024_median_slope": 5.714067962847198,
+      "fldas_chirps_2003_2024_median_slope": 1.166619710131961,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "up8": {
+      "n_tiles": 10,
+      "gldas_2003_2024_median_slope": 3.8689143528168426,
+      "fldas_chirps_2003_2024_median_slope": 0.4375399072980919,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down1": {
+      "n_tiles": 61,
+      "gldas_2003_2024_median_slope": -7.615281627747815,
+      "fldas_chirps_2003_2024_median_slope": -10.291199556913542,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.5573770491803278
+    },
+    "down2": {
+      "n_tiles": 23,
+      "gldas_2003_2024_median_slope": -7.635163451628717,
+      "fldas_chirps_2003_2024_median_slope": 5.88789126766552,
+      "fldas_share_tiles_same_sign": 0.17391304347826086,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down3": {
+      "n_tiles": 24,
+      "gldas_2003_2024_median_slope": -25.72586553863504,
+      "fldas_chirps_2003_2024_median_slope": -10.083471812830915,
+      "fldas_share_tiles_same_sign": 0.9166666666666666,
+      "fldas_share_tiles_raw_p05_same_sign": 0.25
+    },
+    "down4": {
+      "n_tiles": 18,
+      "gldas_2003_2024_median_slope": -15.751344844006876,
+      "fldas_chirps_2003_2024_median_slope": -3.917505036415331,
+      "fldas_share_tiles_same_sign": 1.0,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down5": {
+      "n_tiles": 15,
+      "gldas_2003_2024_median_slope": -22.15856051234786,
+      "fldas_chirps_2003_2024_median_slope": -2.995624620090973,
+      "fldas_share_tiles_same_sign": 0.8,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down6": {
+      "n_tiles": 15,
+      "gldas_2003_2024_median_slope": -19.674151701492683,
+      "fldas_chirps_2003_2024_median_slope": -4.968230855525112,
+      "fldas_share_tiles_same_sign": 0.9333333333333333,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down7": {
+      "n_tiles": 13,
+      "gldas_2003_2024_median_slope": -21.127673357498097,
+      "fldas_chirps_2003_2024_median_slope": -3.795328626187228,
+      "fldas_share_tiles_same_sign": 0.6923076923076923,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    },
+    "down8": {
+      "n_tiles": 11,
+      "gldas_2003_2024_median_slope": -13.308371394490125,
+      "fldas_chirps_2003_2024_median_slope": -4.351439234529407,
+      "fldas_share_tiles_same_sign": 0.9090909090909091,
+      "fldas_share_tiles_raw_p05_same_sign": 0.0
+    }
+  }
+}

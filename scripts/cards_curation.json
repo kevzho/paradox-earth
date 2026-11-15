@@ -1,5 +1,5 @@
 {
-  "_about": "Human-curated parts of the Paradox Earth Discovery Cards. scripts/build_cards.py matches each entry to a region in site/data/regions.json by trend sign and centroid proximity (so this file survives a re-export that reorders region ids). Numbers are NEVER typed here: every number on a card is computed from site/data at build time. All literature was checked against Crossref (DOI resolves, title/journal/year match) on 2026-11-15.",
+  "_about": "Human-curated parts of the Paradox Earth Discovery Cards. scripts/build_cards.py matches each entry to a region in site/data/regions.json by trend sign and centroid proximity (so this file survives a re-export that reorders region ids). Numbers are NEVER typed here: every number on a card is computed from site/data at build time. All literature (incl. the 'observations' cards) was checked against Crossref (DOI resolves, title/journal/year match) on 2026-11-15.",
   "selection": {
     "max_wetting": 3,
     "max_drying": 3,
@@ -308,7 +308,7 @@
   "retraction": {
     "title": "Paradox Earth caught a false trend",
     "place": "Global land: soil water (GLDAS-2.1 Noah)",
-    "headline_template": "Paradox Earth caught a false trend: the apparent soil-water decline is a level shift around {breaks} that lines up with documented changes in the model's radiation input, not a trend, so it is withdrawn.",
+    "headline_template": "Paradox Earth caught a false trend: the apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around {breaks}) and disappears in a consistently forced NASA product (FLDAS, {fldas_window}: {fldas_slope} mm/decade, p = {fldas_p}, {fldas_verdict}).",
     "user": {
       "who": "Teachers and students using the Paradox Earth explorer",
       "decision": "Whether to trust a dramatic trend line before checking how the data were made",
@@ -326,11 +326,19 @@
         "url_or_doi": "https://doi.org/10.1175/BAMS-85-3-381",
         "agrees": "partly",
         "note": "Describes GLDAS as a model driven by changing observation-based forcing, which is why its outputs need homogeneity checks before trend analysis."
+      },
+      {
+        "citation": "Qin, T., Feng, J., Zhang, X., Li, C., Fan, J., Zhang, C., Dong, B., Wang, H., & Yan, D. (2023). Continued decline of global soil moisture content, with obvious soil stratification and regional difference. Science of the Total Environment, 864, 160982.",
+        "url_or_doi": "https://doi.org/10.1016/j.scitotenv.2022.160982",
+        "agrees": false,
+        "note": "Reports a GLDAS-Noah soil-moisture decline (0-200 cm, 2000-2020); our checks attribute the post-2010 part largely to forcing changes. Different question and method: they analyse the model record as given, we test it for forcing breaks first."
       }
     ],
     "caveats": [
-      "Withdrawn as a trend: the soil-water series is shown only as an example of a data artefact.",
-      "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break."
+      "Withdrawn as a trend: the GLDAS-2.1 soil-water series is shown only as an example of a data artefact.",
+      "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; what is withdrawn is the long-term decline.",
+      "FLDAS and GLDAS share the Noah land model, so FLDAS is independent in forcing, not in model physics.",
+      "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break and against CHIRPS."
     ]
   },
   "local": {
@@ -347,5 +355,43 @@
     "caveats": [
       "Placeholder card: set local.bbox to [west, south, east, north] in scripts/cards_curation.json and re-run scripts/build_cards.py to fill it with computed numbers."
     ]
-  }
+  },
+  "observations": [
+    {
+      "key": "nw-india-groundwater",
+      "hotspot": "NW India",
+      "title": "GRACE sees what the soil model cannot",
+      "place": "Northwest India and eastern Pakistan (Punjab, Haryana, Rajasthan; GRACE hotspot box 24-34°N, 68-80°E)",
+      "centroid": [
+        29.0,
+        76.0
+      ],
+      "headline_template": "Over {years}, GRACE/GRACE-FO satellite gravity shows water storage over northwest India falling by about {grace_abs} mm per decade (mean of {n_boxes} 3-degree boxes, {n_sig} significant after false-discovery correction), while NASA's FLDAS land model, which has no groundwater pumping, shows soil water changing by {model} mm per decade. The missing water lines up with the groundwater depletion reported for this region in the literature.",
+      "user": {
+        "who": "A groundwater regulator or irrigation planner in Punjab-Haryana (e.g. a state groundwater authority)",
+        "decision": "Whether to set or tighten groundwater extraction limits and crop-diversification incentives for over-exploited blocks",
+        "why_it_matters": "Soil-moisture and rainfall products can look normal or even wet here while the aquifer is drawn down; an independent satellite measure of total water storage is the check that catches what those products cannot see."
+      },
+      "literature": [
+        {
+          "citation": "Rodell, M., Velicogna, I., & Famiglietti, J. S. (2009). Satellite-based estimates of groundwater depletion in India. Nature, 460, 999-1002.",
+          "url_or_doi": "https://doi.org/10.1038/nature08238",
+          "agrees": true,
+          "note": "GRACE-based groundwater depletion over Rajasthan, Punjab and Haryana (incl. Delhi), 2002-2008, attributed there to irrigation pumping."
+        },
+        {
+          "citation": "Rodell, M., Famiglietti, J. S., Wiese, D. N., Reager, J. T., Beaudoing, H. K., Landerer, F. W., & Lo, M.-H. (2018). Emerging trends in global freshwater availability. Nature, 557, 651-659.",
+          "url_or_doi": "https://doi.org/10.1038/s41586-018-0123-1",
+          "agrees": true,
+          "note": "Global GRACE trends 2002-2016; lists northern India among the largest water-storage declines, linked there to groundwater withdrawal."
+        }
+      ],
+      "caveats": [
+        "GRACE mascons are a few hundred kilometres across; the box mean mixes irrigated plains with desert and foothills.",
+        "The northern boxes border the Himalaya; glacier mass loss can leak into them, so not all of the decline need be groundwater.",
+        "GRACE measures all water storage (groundwater, surface water, soil, snow and ice); this analysis does not separate them, and the cause is taken from the literature, not tested here.",
+        "Only one GRACE solution (JPL mascons) was analysed."
+      ]
+    }
+  ]
 }

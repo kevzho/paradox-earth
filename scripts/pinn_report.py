@@ -37,6 +37,9 @@ def main():
     ap.add_argument("--results", default="outputs_pinn")
     ap.add_argument("--site", default="site")
     ap.add_argument("--demo", default="demo")
+    ap.add_argument("--display-arm", default="base")
+    ap.add_argument("--display-lambda", type=float, default=1.0,
+                    help="configuration shown on the skill map: the budget-closing setting the text recommends")
     args = ap.parse_args()
     res = json.loads((Path(args.results) / "results.json").read_text())
     d = res["design"]
@@ -57,8 +60,8 @@ def main():
             if lam != lams[0]:
                 s = a["summary"][f"lam={lam}"]["test"]["in_region"]
                 paired.setdefault(arm, {})[str(lam)] = {m: s[m].get("paired_diff_vs_lam0") for m in METS}
-    # best configuration by in-region test skill vs AR (selection on test is for REPORTING only; no tuning was done)
-    best = max(rows, key=lambda r: r["test"]["in_region"]["msess_vs_linear_ar"]["mean"])
+    # displayed configuration is fixed up front (not chosen on test skill): the setting the text recommends
+    best = next(r for r in rows if r["arm"] == args.display_arm and float(r["lambda"]) == args.display_lambda)
     out = {"design": d, "rows": rows, "references": refs, "truth_floor_mm": floor, "paired_lambda_effects": paired,
            "best_for_display": {"arm": best["arm"], "lambda": best["lambda"]},
            "figures": {"tradeoff": f"../{args.demo}/pinn_tradeoff.png", "skill_map": f"../{args.demo}/pinn_skill_map.png"}}
@@ -107,19 +110,21 @@ def main():
     ax.set_facecolor(BG)
     im = ax.pcolormesh(lon, lat, m, cmap="RdBu", vmin=-0.6, vmax=0.6, shading="auto")
     ax.axvline(90, color=FG, lw=0.8, ls="--")
-    ax.text(92, -55, "held-out region (never in the training loss)", color=FG, fontsize=9)
+    ax.text(93, -52, "held out of training\n(90°E–180°E)", color=FG, fontsize=9)
     cb = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.01)
     cb.set_label("skill vs linear AR (blue = network better)", color=FG)
     cb.ax.tick_params(colors=MUTED)
-    ax.set_title(f"Where the network beats a linear model: next-month storage change, 2022-2024 "
-                 f"({ARM_LABEL.get(best['arm'], best['arm'])}, λ={best['lambda']:g}, mean of seeds)",
-                 color=FG, loc="left", fontsize=12, fontweight="bold")
+    ax.set_title("Where the network beats a linear model (next-month storage change, 2022–2024)",
+                 color=FG, loc="left", fontsize=13, fontweight="bold")
+    fig.text(0.01, 0.01, f"{ARM_LABEL.get(best['arm'], best['arm'])}, λ={best['lambda']:g}, mean of seeds. In deserts "
+             "storage barely changes, so per-cell skill there is unstable; read the area-weighted totals instead. "
+             "Emulation of NASA GLDAS-2.1 at 1°.", color=MUTED, fontsize=8)
     ax.set_xlim(-180, 180)
     ax.set_ylim(-60, 90)
     ax.tick_params(colors=MUTED)
     for s in ax.spines.values():
         s.set_color(GRID)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
     fig.savefig(Path(args.demo) / "pinn_skill_map.png", facecolor=BG)
     plt.close(fig)
     print("wrote", Path(args.site) / "data" / "pinn.json", "and figures; best for display:", out["best_for_display"])
