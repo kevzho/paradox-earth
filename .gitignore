@@ -5,7 +5,7 @@ __pycache__/
 .env
 .env.*
 data/raw/
-outputs/
+outputs*/
 *.nc4
 *.nc
 .pytest_cache/
