@@ -215,6 +215,9 @@ def run_stats(series: dict, units: dict, out_dir, ref_period=None, manifest_path
     jobs = [(var, rid, df[rid], units.get(var, ""), ref_period, egarch) for var, df in series.items() for rid in df]
     step = max(1, len(jobs) // 20)
     results = []
+    if workers > 1:  # one BLAS thread per worker process; otherwise N workers x M threads oversubscribe the CPU
+        for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+            os.environ.setdefault(k, "1")
     with ProcessPoolExecutor(workers) if workers > 1 else _Serial() as ex:
         for i, r in enumerate(ex.map(_analyse, jobs, chunksize=max(1, len(jobs) // (workers * 8))), 1):
             results.append(r)
