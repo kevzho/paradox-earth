@@ -40,7 +40,8 @@ def homogeneity_note(var: str) -> dict:
     window = ANALYSIS_WINDOWS.get(var)
     return {"window": list(window) if window else None,
             "policy": ("single forcing regime: statistics use this window only; the climatology reference is the window"
-                       if window else "full record: no step at documented forcing dates in land-mean precipitation"),
+                       if window else "full record: no step at documented forcing dates in land-mean precipitation"
+                       if DOCUMENTED_FORCING_EVENTS else "full record: single forcing stream"),
             "documented_forcing_events": DOCUMENTED_FORCING_EVENTS, "source": FORCING_SOURCE}
 PINN_VARS = ["land_water_store", "Rainf_f_tavg", "Evap_tavg", "runoff", "Tair_f_inst"]  # pinn.CHANNELS order
 
@@ -161,8 +162,7 @@ def _attempt(fn, **fallback):
 
 def _analyse(job):
     """Stats for one region x variable. Runs in worker processes; each stage fails independently."""
-    var, rid, y, units, ref_period, egarch = job
-    window = ANALYSIS_WINDOWS.get(var)
+    var, rid, y, units, ref_period, egarch, window = job  # window travels with the job: workers re-import modules
     if window:  # one forcing regime; its own climatology reference (the global one straddles the forcing step)
         y, ref_period = y.loc[window[0]:window[1]], None
     with warnings.catch_warnings():
@@ -212,7 +212,8 @@ class _Serial:
 
 def run_stats(series: dict, units: dict, out_dir, ref_period=None, manifest_path=None, egarch=True, workers=1):
     out_dir = Path(out_dir)
-    jobs = [(var, rid, df[rid], units.get(var, ""), ref_period, egarch) for var, df in series.items() for rid in df]
+    jobs = [(var, rid, df[rid], units.get(var, ""), ref_period, egarch, ANALYSIS_WINDOWS.get(var))
+            for var, df in series.items() for rid in df]
     step = max(1, len(jobs) // 20)
     results = []
     if workers > 1:  # one BLAS thread per worker process; otherwise N workers x M threads oversubscribe the CPU
@@ -257,7 +258,8 @@ def run_pinn(pacc: PinnGridAccumulator, out_dir, cfg: PINNConfig, lams=(0.0, 0.1
 
 
 def run_all(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, ref_period=None, workers=None,
-            pinn_cfg: PINNConfig | None = None, lams=(0.0, 0.1), pinn=True, pinn_coarsen=1, spatial_perms=9999):
+            pinn_cfg: PINNConfig | None = None, lams=(0.0, 0.1), pinn=True, pinn_coarsen=1, spatial_perms=9999,
+            egarch=True):
     from .pinn import PINNConfig
 
     out_dir = Path(out_dir)
@@ -266,7 +268,8 @@ def run_all(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, ref
         (out_dir / sub).mkdir(parents=True, exist_ok=True)
     ing = ingest(raw_dir, out_dir, bbox, tile_deg, variables, pinn=pinn, pinn_coarsen=pinn_coarsen)
     print(f"stats: {sum(df.shape[1] for df in ing.series.values())} series on {workers} workers", flush=True)
-    records, summary = run_stats(ing.series, ing.units, out_dir, ref_period, ing.manifest_path, workers=workers)
+    records, summary = run_stats(ing.series, ing.units, out_dir, ref_period, ing.manifest_path, egarch=egarch,
+                                 workers=workers)
     spatial_summary = None
     if spatial_perms:
         spatial_summary = spatial.run_spatial(records, pd.read_csv(out_dir / "tiles.csv"), out_dir,

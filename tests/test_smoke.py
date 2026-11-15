@@ -301,7 +301,7 @@ def test_failed_egarch_keeps_trend_and_baseline(monkeypatch):
     def boom(*a, **k):
         raise np.linalg.LinAlgError("Singular matrix")
     monkeypatch.setattr(pipeline.variability, "arima_egarch", boom)
-    tr, var_rec, row, cv = pipeline._analyse(("v", "r", _series(slope=0.01), "mm", None, True))
+    tr, var_rec, row, cv = pipeline._analyse(("v", "r", _series(slope=0.01), "mm", None, True, None))
     assert tr["status"] == "ok" and row["slope_per_decade"] is not None
     assert var_rec["baseline_change"]["variance_ratio_late_over_early"] is not None
     assert var_rec["egarch_status"] == "unavailable" and "Singular" in var_rec["egarch"]["reason"] and cv is None
@@ -464,9 +464,10 @@ def test_soil_water_restricted_to_forcing_regime():
     from paradox import pipeline
     idx = pd.date_range("2000-01-01", periods=312, freq="MS")
     y = pd.Series(np.random.default_rng(3).standard_normal(312) + 100, idx)
-    tr, var_rec, row, _ = pipeline._analyse(("soil_water_0_200cm", "r", y, "mm", ("2000-01", "2017-12"), False))
+    tr, var_rec, row, _ = pipeline._analyse(("soil_water_0_200cm", "r", y, "mm", ("2000-01", "2017-12"), False,
+                                                     pipeline.ANALYSIS_WINDOWS["soil_water_0_200cm"]))
     assert tr["window"] == ["2012-01-01", "2024-06-01"] and tr["n"] == 150
-    tr_p, *_ = pipeline._analyse(("Rainf_f_tavg", "r", y, "mm", ("2000-01", "2017-12"), False))
+    tr_p, *_ = pipeline._analyse(("Rainf_f_tavg", "r", y, "mm", ("2000-01", "2017-12"), False, None))
     assert tr_p["window"] == ["2000-01-01", "2025-12-01"]
     assert pipeline.homogeneity_note("soil_water_0_200cm")["window"] == ["2012-01", "2024-06"]
 

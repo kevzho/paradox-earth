@@ -32,6 +32,11 @@ def main():
     ap.add_argument("--pinn-coarsen", type=int, default=1, help="block-average the PINN grid (4 => 1 degree)")
     ap.add_argument("--perms", type=int, default=9999, help="spatial permutations (0 skips §7 in a full run)")
     ap.add_argument("--spatial-only", action="store_true", help="re-run §7 on an existing --out without recomputing")
+    ap.add_argument("--no-egarch", action="store_true", help="skip the ARIMA-EGARCH fits (10x faster stats)")
+    ap.add_argument("--dataset", nargs=2, metavar=("SHORT_NAME", "VERSION"),
+                    help="label outputs for a GLDAS-lookalike dataset, e.g. FLDAS_NOAH01_C_GL_M 001")
+    ap.add_argument("--no-forcing-window", action="store_true",
+                    help="analyse soil water over the full record (for products without GLDAS-2.1's forcing breaks)")
     ap.add_argument("--synthetic", action="store_true")
     args = ap.parse_args()
 
@@ -48,11 +53,19 @@ def main():
         make_synthetic(args.raw)
         args.alignment = "forward"  # synthetic storages are end-of-month states
 
+    from paradox import gldas, pipeline
+    if args.dataset:
+        gldas.DATASET, gldas.VERSION = args.dataset
+    if args.no_forcing_window:
+        pipeline.ANALYSIS_WINDOWS.clear()
+    if args.dataset and args.dataset[0].startswith("FLDAS"):  # single MERRA-2 + CHIRPS forcing stream
+        pipeline.DOCUMENTED_FORCING_EVENTS = {}
+        pipeline.FORCING_SOURCE = "https://docserver.gesdisc.eosdis.nasa.gov/public/project/hydrology/README_FLDAS.pdf"
     cfg = PINNConfig(epochs=args.epochs, alignment=args.alignment)
     out = run_all(args.raw, args.out, bbox=args.bbox, tile_deg=args.tile,
                   ref_period=tuple(args.ref) if args.ref else None, workers=args.workers,
                   pinn_cfg=cfg, lams=(0.0, args.lam), pinn=not args.no_pinn, pinn_coarsen=args.pinn_coarsen,
-                  spatial_perms=args.perms)
+                  spatial_perms=args.perms, egarch=not args.no_egarch)
     print("QC passed:", out["qc"]["passed"])
     print(out["summary"].groupby(["variable", "egarch_status"]).size().to_string())
     for k, v in (out["spatial"] or {}).items():

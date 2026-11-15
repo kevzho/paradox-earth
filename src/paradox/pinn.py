@@ -42,7 +42,11 @@ class PINNConfig:
     lr: float = 1e-3
     patch: int = 64                   # random crop size during training for large grids
     seed: int = 0
-    device: str = "cpu"
+    device: str = "cpu"               # "cpu", "mps" (Apple GPU) or "cuda"
+    n_forcing: int = 0                # extra forcing channels after the 5 CHANNELS (e.g. SWdown, LWdown); inputs only
+    val_every: int = 1                # validate every k epochs (model selection on validation dS loss)
+    guard: int = 0                    # columns between train region and spatial holdout, used by neither (the CNN's
+                                      # receptive field is 4 cells, so cells next to the boundary see the other side)
 
 
 # ---------------------------------------------------------------- data
@@ -59,22 +63,32 @@ def arrays_from_dataset(ds: xr.Dataset, store: str = "land_water_store"):
 class Prepared:
     """Normalised samples, chronological splits and train-only statistics."""
 
-    def __init__(self, arr, mask, months, cfg: PINNConfig):
+    def __init__(self, arr, mask, months, cfg: PINNConfig, splits: dict | None = None):
+        """`splits` optionally gives explicit {name: t indices} (input window ends at t, target is t+1), e.g. date-based
+        train/val/test plus an out-of-regime set; otherwise chronological fractions of the record."""
         self.cfg, self.arr, self.mask, self.months = cfg, arr, mask, months
-        nt, _, h, w = arr.shape
+        nt, nc, h, w = arr.shape
+        if nc != len(CHANNELS) + cfg.n_forcing:
+            raise ValueError(f"array has {nc} channels, expected {len(CHANNELS)} + n_forcing={cfg.n_forcing}")
         L = cfg.window
         self.t_idx = np.arange(L - 1, nt - 1)  # input ends at t, target is t+1
         n = len(self.t_idx)
         n_tr, n_va = int(n * cfg.train_frac), int(n * cfg.val_frac)
-        self.split = {"train": self.t_idx[:n_tr], "val": self.t_idx[n_tr:n_tr + n_va], "test": self.t_idx[n_tr + n_va:]}
+        self.split = ({k: np.asarray(v, int) for k, v in splits.items()} if splits else
+                      {"train": self.t_idx[:n_tr], "val": self.t_idx[n_tr:n_tr + n_va],
+                       "test": self.t_idx[n_tr + n_va:]})
+        for k, v in self.split.items():
+            if len(v) and (v.min() < L - 1 or v.max() > nt - 2):
+                raise ValueError(f"split {k} needs t in [{L - 1}, {nt - 2}]")
         if min(len(v) for v in self.split.values()) == 0:
             raise ValueError("series too short for train/val/test split")
         # spatial holdout: eastern columns
         self.train_cells = mask.copy()
         k = int(round(w * cfg.spatial_holdout_frac))
+        self.holdout_cells = np.zeros_like(mask)
         if k:
-            self.train_cells[:, w - k:] = False
-        self.holdout_cells = mask & ~self.train_cells
+            self.train_cells[:, max(w - k - cfg.guard, 0):] = False
+            self.holdout_cells[:, w - k + cfg.guard:] = mask[:, w - k + cfg.guard:]
         # train-only normalisation (times up to the last training target, train cells only)
         t_last = self.split["train"][-1] + 1
         sub = arr[:t_last + 1][:, :, self.train_cells]          # (t, C, ncells)
@@ -93,8 +107,9 @@ class Prepared:
         mth = self.months[t + 1]
         extra = [np.full((h, w), np.sin(2 * np.pi * mth / 12)), np.full((h, w), np.cos(2 * np.pi * mth / 12)),
                  self.mask.astype(np.float32)]
-        if cfg.forcing_known:
+        if cfg.forcing_known:  # next-month forcing is known (forcing-driven emulation): P, T and any extra forcing
             extra += [self.norm(a[t + 1, P], P), self.norm(a[t + 1, T], T)]
+            extra += [self.norm(a[t + 1, c], c) for c in range(len(CHANNELS), len(CHANNELS) + cfg.n_forcing)]
         x = np.concatenate([win.reshape(-1, h, w), np.stack(extra)], axis=0)
         return (x * self.mask).astype(np.float32)
 
@@ -113,7 +128,8 @@ class Prepared:
 
     @property
     def n_in(self) -> int:
-        return self.cfg.window * len(CHANNELS) + 3 + (2 if self.cfg.forcing_known else 0)
+        nc = len(CHANNELS) + self.cfg.n_forcing
+        return self.cfg.window * nc + 3 + ((2 + self.cfg.n_forcing) if self.cfg.forcing_known else 0)
 
 
 # ---------------------------------------------------------------- model
@@ -153,7 +169,7 @@ def _losses(model, prep: Prepared, x, y, f_t, p_next, cell_mask):
     cfg = prep.cfg
     out = model(x)
     m = cell_mask.float()
-    w = torch.ones(4)
+    w = torch.ones(4, device=out.device)
     if cfg.forcing_known:
         w[1] = 0.0  # P_{t+1} is an input, do not "predict" it
     se = ((out - y) ** 2) * w[None, :, None, None]
@@ -161,7 +177,8 @@ def _losses(model, prep: Prepared, x, y, f_t, p_next, cell_mask):
     ds, p, et, r = physical(out, prep, p_next if cfg.forcing_known else None)
     res = water_balance_residual(ds, p, et, r, f_t, cfg.alignment) / prep.sd_ds
     l_wb = ((res ** 2) * m).sum() / (m.sum() * out.shape[0])
-    return l_pred, l_wb
+    l_ds = (((out[:, 0] - y[:, 0]) ** 2) * m).sum() / (m.sum() * out.shape[0])  # storage-change term alone
+    return l_pred, l_wb, l_ds
 
 
 def _crop(tensors, size, rng):
@@ -178,31 +195,38 @@ def train(prep: Prepared, cfg: PINNConfig | None = None, verbose: bool = False):
     prep.cfg = cfg
     torch.manual_seed(cfg.seed)
     rng = np.random.default_rng(cfg.seed)
-    model = WaterBalanceNet(prep.n_in, cfg.hidden)
+    dev = torch.device(cfg.device)
+    model = WaterBalanceNet(prep.n_in, cfg.hidden).to(dev)
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
-    train_mask = torch.from_numpy(prep.train_cells)
+    train_mask = torch.from_numpy(prep.train_cells).to(dev)
     best, best_state, history = np.inf, None, []
-    xv, yv, fv, pv = prep.batch(prep.split["val"])
+    xv, yv, fv, pv = (t.to(dev) for t in prep.batch(prep.split["val"]))
     for ep in range(cfg.epochs):
         model.train()
         order = rng.permutation(prep.split["train"])
         for i in range(0, len(order), cfg.batch):
-            x, y, f_t, p_next = prep.batch(order[i:i + cfg.batch])
+            x, y, f_t, p_next = (t.to(dev) for t in prep.batch(order[i:i + cfg.batch]))
             m = train_mask.expand(x.shape[0], *train_mask.shape)
             x, y, f_t, p_next, m = _crop([x, y, f_t, p_next, m], cfg.patch, rng)
-            l_pred, l_wb = _losses(model, prep, x, y, f_t, p_next, m[0])
+            if m[0].sum() < 1:  # a crop with no training cells (ocean / holdout) would give 0/0 = NaN
+                continue
+            l_pred, l_wb, _ = _losses(model, prep, x, y, f_t, p_next, m[0])
             loss = l_pred + cfg.lam * l_wb
             opt.zero_grad()
             loss.backward()
             opt.step()
+        if (ep + 1) % cfg.val_every and ep != cfg.epochs - 1:
+            continue
         model.eval()
-        with torch.no_grad():  # model selection on validation PREDICTION loss only (fair across lambda)
-            vp, vw = _losses(model, prep, xv, yv, fv, pv, train_mask)
-        history.append({"epoch": ep, "val_pred": float(vp), "val_wb": float(vw)})
-        if float(vp) < best:
-            best, best_state = float(vp), {k: v.clone() for k, v in model.state_dict().items()}
+        with torch.no_grad():  # model selection on the validation storage-change loss only (fair across lambda)
+            vp, vw, vds = _losses(model, prep, xv, yv, fv, pv, train_mask)
+        history.append({"epoch": ep, "val_pred": float(vp), "val_wb": float(vw), "val_ds": float(vds)})
+        if np.isfinite(float(vds)) and float(vds) < best:
+            best, best_state = float(vds), {k: v.detach().clone() for k, v in model.state_dict().items()}
         if verbose and ep % 10 == 0:
             print(f"ep {ep:3d} val_pred={float(vp):.4f} val_wb={float(vw):.4f}")
+    if best_state is None:
+        raise RuntimeError("no finite validation loss: training diverged")
     model.load_state_dict(best_state)
     return model, history
 
@@ -218,21 +242,25 @@ def _metrics(pred, truth, cells, budget_res=None):
     return out
 
 
-def predict_storage(model, prep: Prepared, ts):
-    x, _, f_t, p_next = prep.batch(ts)
+def predict_storage(model, prep: Prepared, ts, chunk: int = 8):
+    """Next-month storage and water-budget residual (mm) for target months ts+1, evaluated in chunks."""
+    dev = next(model.parameters()).device
+    ds_all, res_all = [], []
     with torch.no_grad():
-        out = model(x)
-        ds, p, et, r = physical(out, prep, p_next if prep.cfg.forcing_known else None)
-        res = water_balance_residual(ds, p, et, r, f_t, prep.cfg.alignment)
-    s_next = prep.arr[ts, S] + ds.numpy()
-    return s_next, res.numpy()
+        for i in range(0, len(ts), chunk):
+            x, _, f_t, p_next = (t.to(dev) for t in prep.batch(ts[i:i + chunk]))
+            out = model(x)
+            ds, p, et, r = physical(out, prep, p_next if prep.cfg.forcing_known else None)
+            ds_all.append(ds.cpu().numpy())
+            res_all.append(water_balance_residual(ds, p, et, r, f_t, prep.cfg.alignment).cpu().numpy())
+    return prep.arr[ts, S] + np.concatenate(ds_all), np.concatenate(res_all)
 
 
 def _ar_features(prep: Prepared, t):
     a, mth = prep.arr, prep.months[t + 1]
     feats = [a[t, S], a[t - 1, S], a[t, P], a[t, ET], a[t, R], a[t, T]]
-    if prep.cfg.forcing_known:
-        feats += [a[t + 1, P], a[t + 1, T]]
+    if prep.cfg.forcing_known:  # same known next-month forcing as the network, so the comparison is fair
+        feats += [a[t + 1, P], a[t + 1, T]] + [a[t + 1, c] for c in range(len(CHANNELS), a.shape[1])]
     h, w = a.shape[-2:]
     feats += [np.full((h, w), np.sin(2 * np.pi * mth / 12)), np.full((h, w), np.cos(2 * np.pi * mth / 12)),
               np.ones((h, w))]

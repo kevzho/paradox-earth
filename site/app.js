@@ -87,7 +87,10 @@
 
   function tileColor(t, i) {
     let target;
-    if (S.layer === "sig") target = t.sig > 0 ? C.wet : t.sig < 0 ? C.dry : C.faded;
+    if (S.layer === "sig") {
+      const possible = t.sig === 0 && t.p != null && t.p < S.alpha && t.slope != null;
+      target = t.sig > 0 ? C.wet : t.sig < 0 ? C.dry : possible ? mix(C.faded, t.slope > 0 ? C.wet : C.dry, 0.38) : C.faded;
+    }
     else if (S.layer === "pct") {
       const v = clamp((t.pct || 0) / S.pctMax, -1, 1);
       target = mix(C.mid, v >= 0 ? C.wet : C.dry, Math.pow(Math.abs(v), 0.8));
@@ -337,7 +340,7 @@
     const sw = (c, label) => `<div class="row"><span class="sw" style="background:${rgb(c)}"></span>${label}</div>`;
     let h = "";
     if (S.layer === "sig") {
-      h = `<div class="legend-title">Trend after FDR correction</div>${sw(C.wet, "Wetting (q &lt; " + S.alpha + ")")}${sw(C.dry, "Drying (q &lt; " + S.alpha + ")")}${sw(C.faded, "Not significant")}`;
+      h = `<div class="legend-title">Trend evidence, ${periodText()}</div>${sw(C.wet, "Detectable wetting (q &lt; " + S.alpha + ")")}${sw(C.dry, "Detectable drying (q &lt; " + S.alpha + ")")}${sw(mix(C.faded, C.wet, 0.38), "Possible wetting (p &lt; " + S.alpha + " alone)")}${sw(mix(C.faded, C.dry, 0.38), "Possible drying (p &lt; " + S.alpha + " alone)")}${sw(C.faded, "No trend detected")}`;
     } else if (S.layer === "pct") {
       h = `<div class="legend-title">Trend, % of mean per decade</div><div class="ramp" style="background:linear-gradient(90deg,${rgb(C.dry)},${rgb(C.mid)},${rgb(C.wet)})"></div><div class="ramp-lab"><span>−${S.pctMax}</span><span>0</span><span>+${S.pctMax}</span></div>`;
     } else {
@@ -350,13 +353,13 @@
   function verdictShort(t) {
     if (t.sig > 0) return "Supported wetting trend";
     if (t.sig < 0) return "Supported drying trend";
-    if (t.p != null && t.p < S.alpha) return "Suggestive, fails correction";
+    if (t.p != null && t.p < S.alpha) return `Possible ${t.slope > 0 ? "wetting" : "drying"}, not confirmed`;
     return "No detectable trend";
   }
   function confidence(t) {
     const n = S.tiles.length.toLocaleString("en-US");
     if (t.sig !== 0) return `<strong>Statistically supported ${t.sig > 0 ? "wetting" : "drying"} trend.</strong> It survives the false-discovery correction for testing ${n} tiles at once (q = ${pval(t.q)}), so it is unlikely to be a fluke of testing so many places. It describes ${periodText()} and does not identify a cause.`;
-    if (t.p != null && t.p < S.alpha) return `<strong>Suggestive, but not supported.</strong> On its own this trend looks significant (p = ${pval(t.p)}), but after correcting for ${n} simultaneous tests (q = ${pval(t.q)}) it could be chance. The detector does not count it.`;
+    if (t.p != null && t.p < S.alpha) return `<strong>Possible ${t.slope > 0 ? "wetting" : "drying"} trend, not confirmed at this tile.</strong> Tested alone it passes (p = ${pval(t.p)}). But when ${n} tiles are tested, about 1 in 20 pass by chance, and ${periodText()} is short next to decade-long swings such as El Niño, so after the false-discovery correction (q = ${pval(t.q)}) the detector cannot single this tile out. Many such tiles are probably real; the map shows them faintly, and the headline numbers do not count them.`;
     return `<strong>No detectable trend.</strong> Year-to-year swings here are larger than any steady change over ${periodText()} (p = ${pval(t.p)}).`;
   }
   const LISA = {

@@ -12,3 +12,4 @@ outputs*/
 data/*.log
 demo/review/
 scripts/__pycache__/
+data/pinn/
