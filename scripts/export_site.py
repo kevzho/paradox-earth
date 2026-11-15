@@ -40,12 +40,65 @@ def r(x, nd):
     return None if x is None or not np.isfinite(x) else round(float(x), nd)
 
 
+def soil_water_story(artifact: Path, fldas: Path, grace: Path) -> dict:
+    """The soil-water investigation for the explorer: why GLDAS-2.1's decline was withdrawn and what a consistently
+    forced product (NASA FLDAS) and observations (GRACE/GRACE-FO) show instead. Missing pieces are left out."""
+    story = {}
+    if artifact.exists():
+        a = json.loads(artifact.read_text())
+        h = a.get("headline", {})
+        story["artifact_control"] = {
+            "what": "GLDAS-2.1 vs GLDAS-2.0: same Noah model and grid, different forcing, 2000-2014",
+            "step_date": a.get("step_date"), "forcing": a.get("forcing"), "source": a.get("forcing_source"),
+            "swdown_step_21_W_m2": h.get("swdown_step_2.1_W_m2"), "swdown_step_21_ci95": h.get("swdown_step_2.1_ci95"),
+            "swdown_step_20_W_m2": h.get("swdown_step_2.0_W_m2"), "swdown_step_20_ci95": h.get("swdown_step_2.0_ci95"),
+            "swdown_step_difference_W_m2": h.get("swdown_step_difference_W_m2"),
+            "headline": {k: v for k, v in h.items() if isinstance(v, (int, float, str, list))},
+            "figure": "../demo/artifact_control.png",
+            "reading": ("Incoming solar radiation steps up only in GLDAS-2.1's forcing at 2010-08, and evaporation responds "
+                        "only in 2.1. The 2011-2013 soil-water dip appears in both versions, deeper in 2.1: the forcing "
+                        "change exaggerated a real dip into an apparent long-term decline.")}
+    fh = fldas / "headline_soil_water_0_200cm.json"
+    if fh.exists():
+        f = json.loads(fh.read_text())
+        ag, rg = f["aggregate"], f["regional"]
+        story["fldas"] = {
+            "dataset": "FLDAS_NOAH01_C_GL_M v001 (Noah 3.6.1, MERRA-2 + CHIRPS forcing), doi:10.5067/5NHC22T9375G",
+            "window": ag.get("window"), "aggregate_slope_mm_per_decade": ag.get("slope"), "aggregate_ci95": ag.get("ci95"),
+            "aggregate_p": ag.get("p_value"), "share_area_wetting": rg.get("share_area_up"),
+            "share_area_drying": rg.get("share_area_down"), "weights": f.get("weights"),
+            "regions": {k: [{kk: r[kk] for kk in ("n_tiles", "area_km2", "centroid_lat", "centroid_lon", "bbox",
+                                                   "median_slope_per_decade", "median_slope_pct_per_decade")}
+                            for r in f["regions"].get(k, [])[:5]] for k in ("up", "down")}}
+    gs, gc = grace / "grace_trends_summary.json", sorted(grace.glob("compare_outputs_fldas_*.json"))
+    if gs.exists():
+        g = json.loads(gs.read_text())
+        story["grace"] = {"product": (g.get("grace") or {}).get("title"), "window": g.get("window"),
+                          "land_area_share_fdr_significant": g.get("land_area_share_fdr_significant"),
+                          "land_area_share_negative_slope": g.get("land_area_share_negative_slope")}
+        if gc:
+            c = json.loads(gc[-1].read_text())
+            story["grace"]["vs_fldas_soil_water"] = {
+                "window": c.get("window"), "sign_match_area_sig_either": (c.get("sign_match_share_area_weighted") or {}).get("sig_in_either"),
+                "spearman_slopes": (c.get("spearman_slopes") or {}).get("all_boxes"),
+                "hotspots": {k: {kk: v.get(kk) for kk in ("grace_mean_slope_mm_decade", "model_mean_slope_mm_decade",
+                                                          "n_grace_sig", "n_boxes")}
+                             for k, v in (c.get("hotspots") or {}).items()},
+                "note": "GRACE measures total water storage (incl. groundwater, surface water, ice); compare signs, not sizes"}
+    return story
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="outputs_global")
     ap.add_argument("--site", default="site")
     ap.add_argument("--var", default=VAR)
     ap.add_argument("--alpha", type=float, default=0.05)
+    ap.add_argument("--artifact", default="outputs_artifact/artifact_control.json")
+    ap.add_argument("--fldas", default="outputs_fldas")
+    ap.add_argument("--grace", default="outputs_grace")
+    ap.add_argument("--cross-check", default="outputs_fldas/precip_cross_check.json",
+                    help="CHIRPS/FLDAS precipitation cross-check (scripts/precip_cross_check.py); skipped if absent")
     args = ap.parse_args()
     out, site, var = Path(args.out), Path(args.site), args.var
     data = site / "data"
@@ -113,6 +166,7 @@ def main():
                     "variable_label": "Precipitation (rain + snow), GLDAS-2.1 forcing (GPCP-based)",
                     "units": "mm/month", "period": [f"{df.index[0]:%Y-%m}", f"{df.index[-1]:%Y-%m}"]},
         "tile_deg": run_cfg.get("tile_deg"), "n_tiles": len(ids), "qc_passed": qc.get("passed"),
+        "source_run": out.resolve().name,
         "headline": {"aggregate": a, "regional": g, "windows": head.get("windows", {}), "weights": head.get("weights")},
         "methods": {
             "trend": a.get("method"),
@@ -132,6 +186,12 @@ def main():
                        "not significant, so the trend was withdrawn and soil water is analysed only inside that "
                        "window.")},
     }
+    meta["soil_water"] = soil_water_story(Path(args.artifact), Path(args.fldas), Path(args.grace))
+    xc = Path(args.cross_check)
+    if xc.exists():
+        cross = json.loads(xc.read_text())
+        write_json(data / "crosscheck.json", cross)
+        meta["cross_checks"] = {"precip_chirps_fldas": {k: v for k, v in cross.items() if k != "regions"}}
     write_json(data / "meta.json", meta)
     print(f"exported {len(ids)} tiles, {len(blocks)} series blocks, "
           f"{len(regions['up'])}+{len(regions['down'])} regions -> {data}")

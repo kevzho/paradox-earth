@@ -101,6 +101,8 @@ class SiteData:
         data = site / "data"
         self.meta = load_json(data / "meta.json")
         self.regions = load_json(data / "regions.json")
+        xc = data / "crosscheck.json"
+        self.crosscheck = load_json(xc) if xc.exists() else {}
         tiles = load_json(data / "tiles.json")
         cols = tiles["cols"]
         self.tile_deg = float(tiles.get("tile_deg") or self.meta.get("tile_deg") or 1.0)
@@ -126,9 +128,12 @@ class SiteData:
         root = self.site.resolve().parent
         # the same LISA field the export used for tiles.json "lisa" (and the regions), so queen and kNN labels refer
         # to the same map; newest run first; the tile-overlap test below rejects a run that does not match
+        # use exactly the run this export came from (meta.source_run); fall back to the newest run otherwise
+        run = self.meta.get("source_run")
+        pattern = f"{run}/spatial" if run else "outputs*/spatial"
         cands = []
         for field in ("trend_slope_pct", "trend_slope"):
-            cands = sorted(root.glob(f"outputs*/spatial/{var}__{field}.csv"), key=lambda q: -q.stat().st_mtime)
+            cands = sorted(root.glob(f"{pattern}/{var}__{field}.csv"), key=lambda q: -q.stat().st_mtime)
             if cands:
                 break
         import csv
@@ -353,6 +358,22 @@ def check_neighbours(tiles, sign, knn, knn_labels=None, knn_source=None):
             "detail": f"{queen}; kNN weights agree on {val:.0%} of clustered tiles ({path})."}, share
 
 
+def check_independent_product(data, region_id, sign):
+    """Same region, independent precipitation product: CHIRPS (via NASA FLDAS) over the common 2003-2024 window."""
+    name = "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)"
+    x = (data.crosscheck.get("regions") or {}).get(region_id)
+    if not x:
+        return {"check": name, "status": "not_run", "detail": "No CHIRPS/FLDAS comparison for this region."}
+    same, sig = x["fldas_share_tiles_same_sign"], x["fldas_share_tiles_raw_p05_same_sign"]
+    status = "pass" if same >= 0.9 and sig >= 0.5 else "partial" if same >= 0.7 else "fail"
+    word = "wetting" if sign > 0 else "drying"
+    detail = (f"Over 2003-2024, CHIRPS-based precipitation shows {word} in {same:.0%} of this region's {x['n_tiles']} "
+              f"tiles ({sig:.0%} individually significant at p < 0.05); median trend "
+              f"{x['fldas_chirps_2003_2024_median_slope']:+.1f} mm/month per decade vs "
+              f"{x['gldas_2003_2024_median_slope']:+.1f} in GLDAS over the same years.")
+    return {"check": name, "status": status, "detail": detail}
+
+
 def check_literature(lit):
     name = "Agreement with independent literature"
     if not lit:
@@ -371,6 +392,7 @@ def check_literature(lit):
 
 
 INDEPENDENT = ("Stability across time windows", "Agreement between neighbour definitions (queen vs kNN LISA)",
+               "Agreement with an independent precipitation product (CHIRPS, via NASA FLDAS)",
                "Agreement with independent literature")
 
 
@@ -382,10 +404,11 @@ def evidence_level(checks):
         return "observed pattern"
     if st.get("Stability across time windows") == "fail":
         return "statistically supported (window-sensitive)"
-    if all(st.get(k) == "pass" for k in INDEPENDENT):
-        return "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)"
-    n_pass = sum(st.get(k) == "pass" for k in INDEPENDENT)
-    return f"supported: passes {n_pass} of 3 extra checks"
+    ran = [k for k in INDEPENDENT if k in st and st[k] != "not_run"]
+    n_pass = sum(st.get(k) == "pass" for k in ran)
+    if ran and n_pass == len(ran):
+        return f"robust pattern: passes all {len(ran)} extra checks (windows, neighbours, independent data, literature)"
+    return f"supported: passes {n_pass} of {len(ran)} extra checks"
 
 
 # ----------------------------------------------------------------------------- cards
@@ -470,6 +493,7 @@ def region_card(data, entry, region, knn, global_caveats):
     ids = region.get("tiles") or [tid for tid, t in data.tiles.items() if t.get("region") == region["id"]]
     tiles = [data.tiles[i] for i in ids if i in data.tiles]
     numbers, checks, area_note = build_stats(data, tiles, sign, region, knn)
+    checks.append(check_independent_product(data, region.get("id"), sign))
     checks.append(check_literature(entry.get("literature", [])))
     caveats = list(entry.get("caveats", [])) + ([area_note] if area_note else []) + global_caveats
     return {
