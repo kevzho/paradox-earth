@@ -81,8 +81,9 @@ def _clean(o):
     return str(o)
 
 
-def write_json(path: str | Path, obj) -> Path:
-    """Write strict JSON (no bare NaN/Infinity, which browsers and most parsers reject)."""
+def write_json(path: str | Path, obj, compact: bool = False) -> Path:
+    """Write strict JSON (no bare NaN/Infinity, which browsers and most parsers reject); `compact` drops whitespace."""
     path = Path(path)
-    path.write_text(json.dumps(_clean(obj), indent=2, allow_nan=False))
+    fmt = {"separators": (",", ":")} if compact else {"indent": 2}
+    path.write_text(json.dumps(_clean(obj), allow_nan=False, **fmt))
     return path

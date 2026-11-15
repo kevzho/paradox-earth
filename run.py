@@ -57,6 +57,10 @@ def main():
     print(out["summary"].groupby(["variable", "egarch_status"]).size().to_string())
     for k, v in (out["spatial"] or {}).items():
         print(k, v.get("label_counts", v.get("status")))
+    if out["headline"]:
+        a, g = out["headline"]["aggregate"], out["headline"]["regional"]
+        print(f"headline {out['headline']['variable']}: aggregate {a['slope']:.3f}/decade (p={a['p_value']:.3g}); "
+              f"FDR land area up {g['share_area_up']:.1%}, down {g['share_area_down']:.1%}")
     if out["pinn"]:
         for k, r in out["pinn"]["runs"].items():
             m = r["test"]["in_region"]

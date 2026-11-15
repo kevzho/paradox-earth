@@ -201,7 +201,9 @@ def test_streaming_ingest_matches_in_memory(raw_dir, ds, tmp_path):
     from paradox.pipeline import ingest
     (tmp_path / "manifests").mkdir()
     ing = ingest(raw_dir, tmp_path, tile_deg=1.25, variables=("soil_water_0_200cm",), pinn_coarsen=1)
+    masks = ing.report.pop("masks")
     assert ing.report == qc.qc_dataset(ds, [v for v in gldas.ALL_VARS if v in ds])
+    assert masks["ice_cells"] == 0 and masks["land_cells"] == int(np.isfinite(ds["soil_water_0_200cm"][0]).sum())
     pd.testing.assert_frame_equal(ing.series["soil_water_0_200cm"], gldas.tile_series(ds, "soil_water_0_200cm", 1.25),
                                   check_names=False, check_freq=False)
     arr, mask, months = ing.pinn.arrays()
@@ -222,7 +224,8 @@ def test_parallel_stats_match_serial(raw_dir, tmp_path):
 
 def test_pipeline_end_to_end(raw_dir, tmp_path):
     from paradox.pipeline import run_all
-    out = run_all(raw_dir, tmp_path, tile_deg=1.25, variables=("soil_water_0_200cm",), workers=1,
+    # precipitation: the synthetic record (2000-2013) is shorter than the soil-water forcing-regime window
+    out = run_all(raw_dir, tmp_path, tile_deg=1.25, variables=("Rainf_f_tavg",), workers=1,
                   pinn_cfg=PINNConfig(epochs=2, alignment="forward", hidden=8), pinn_coarsen=2)
     recs = json.loads((tmp_path / "records.json").read_text())
     assert recs and recs[0]["trend"]["status"] == "ok"
@@ -278,7 +281,7 @@ def test_lisa_bh_calibrated_on_heavy_tailed_null():
 
 def test_spatial_fills_records(raw_dir, tmp_path):
     from paradox.pipeline import run_all
-    run_all(raw_dir, tmp_path, tile_deg=0.5, variables=("soil_water_0_200cm",), workers=1, pinn=False,
+    run_all(raw_dir, tmp_path, tile_deg=0.5, variables=("Rainf_f_tavg",), workers=1, pinn=False,
             spatial_perms=99)
     def no_nan(x):
         raise ValueError(f"non-strict JSON constant {x}")
@@ -372,3 +375,97 @@ def test_review2_edge_cases(ds, tmp_path):
             for i, rid in enumerate(t.region_id)]
     summ = spatial.run_spatial(recs, t, tmp_path, permutations=99)
     assert summ["v__trend_slope"]["status"] == "error" and summ["v__log_variance_ratio"]["status"] == "ok"
+
+
+def test_ice_cells_masked_from_soil_water_not_precip(tmp_path):
+    from paradox.pipeline import ingest
+    from paradox.synthetic import make_synthetic
+    ds = make_synthetic(None, n_years=11, nlat=8, nlon=8, write=False)
+    for layer, cap in zip(["SoilMoi0_10cm_inst", "SoilMoi10_40cm_inst", "SoilMoi40_100cm_inst",
+                           "SoilMoi100_200cm_inst"], [100, 300, 600, 1000]):
+        ds[layer][:, 7, 7] = cap  # one glacier cell at full saturation (2000 mm), constant in time
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    for i, t in enumerate(ds.time.values):
+        ds.isel(time=[i]).to_netcdf(raw / f"GLDAS_NOAH025_M.A{pd.Timestamp(t):%Y%m}.021.nc4")
+    out = tmp_path / "out"
+    (out / "manifests").mkdir(parents=True)
+    ing = ingest(raw, out, tile_deg=0.5, variables=("Rainf_f_tavg", "soil_water_0_200cm"), pinn=True)
+    masks = ing.report["masks"]
+    assert masks["ice_cells"] == 1 and masks["ice_soil_water_max_range_mm"] < 1e-3
+    tile = "tile_+031.50_-0098.50"  # contains cell (7, 7): lat 31.875, lon -98.125
+    soil = ing.series["soil_water_0_200cm"][tile]
+    assert soil.max() < 1500  # glacier value excluded from the tile mean
+    tiles = pd.read_csv(out / "tiles.csv").set_index("region_id")
+    a_p, a_s = tiles.loc[tile, "area_km2__Rainf_f_tavg"], tiles.loc[tile, "area_km2__soil_water_0_200cm"]
+    assert a_s == pytest.approx(a_p * 3 / 4, rel=0.01)  # precip keeps the ice cell, soil water drops it
+    assert tiles.loc[tile, "ice_frac"] == 0.25 and (tiles["land_frac"].between(0, 1)).all()
+    assert not ing.pinn.mask[-1, -1]  # PINN grid also excludes the ice cell (land_water_store masked)
+
+
+def test_cell_areas_sum_to_sphere_band():
+    lat = -89.875 + 0.25 * np.arange(720)
+    lon = -179.875 + 0.25 * np.arange(1440)
+    g = gldas.TileGrid(lat, lon, 1.0)
+    assert g.cell_area_km2.sum() == pytest.approx(4 * np.pi * gldas.EARTH_RADIUS_KM ** 2, rel=1e-9)
+
+
+
+# ---- flagship headline ---------------------------------------------------------------------------------------
+
+def test_headline_helpers():
+    from paradox import headline
+    df = pd.DataFrame({"a": [1.0, 2.0, np.nan], "b": [3.0, 4.0, 5.0]})
+    agg = headline.land_aggregate(df, np.array([1.0, 3.0]))
+    assert agg.tolist() == [2.5, 3.5, 5.0]  # renormalised when a tile is missing
+    slope = pd.Series([1.0, -1.0, 1.0, np.nan], index=list("wxyz"))
+    p = pd.Series([1e-6, 1e-6, 0.9, 0.01], index=list("wxyz"))
+    area = pd.Series([1.0, 2.0, 3.0, 4.0], index=list("wxyz"))
+    f = headline.fdr_shares(slope, p, area)
+    assert f["n_tiles_tested"] == 3
+    assert f["share_area_up"] == pytest.approx(1 / 6) and f["share_area_down"] == pytest.approx(2 / 6)
+    t = _lattice(n_lat=3, n_lon=360)
+    comps = headline.connected_regions(["tile_+001.00_-0180.00", "tile_+001.00_+0179.00", "tile_+001.00_+0010.00"], t)
+    assert [len(c) for c in comps] == [2, 1]  # dateline neighbours join
+
+
+def test_headline_end_to_end(raw_dir, tmp_path):
+    from paradox.pipeline import run_all
+    out = run_all(raw_dir, tmp_path, tile_deg=0.5, variables=("Rainf_f_tavg", "soil_water_0_200cm"), workers=1,
+                  pinn=False, spatial_perms=99)
+    h = out["headline"]
+    assert h and h["variable"] == "Rainf_f_tavg" and h["weights"].startswith("true land area")
+    assert {"full", "2003-2025", "2000-2020"} - {"full"} <= set(h["windows"]) or h["windows"] == {}
+    assert (tmp_path / "headline_Rainf_f_tavg.json").exists()
+    assert 0 <= h["regional"]["share_area_up"] <= 1
+
+
+def test_trend_test_calibrated_under_persistence():
+    """Regression: NW(5) HAC rejected ~30% of no-trend AR(1) phi=0.87 series; the IUT test must stay near 5%."""
+    rng = np.random.default_rng(7)
+    idx = pd.date_range("2000-01-01", periods=312, freq="MS")
+    season = 10 * np.sin(2 * np.pi * idx.month / 12)
+    rejections = 0
+    for _ in range(300):
+        e = np.zeros(312)
+        z = rng.standard_normal(312)
+        for t in range(1, 312):
+            e[t] = 0.87 * e[t - 1] + z[t]
+        rejections += trend.seasonal_trend(pd.Series(season + e, idx))["p_value"] < 0.05
+    assert rejections / 300 < 0.10
+    y = pd.Series(season + rng.standard_normal(312) + 0.02 * np.arange(312), idx)  # 2.4 units/decade, white noise
+    r = trend.seasonal_trend(y)
+    assert r["p_value"] < 1e-3 and r["ci95"][0] < 2.4 < r["ci95"][1]
+    gappy = y.drop(y.index[[50, 51]])
+    assert trend.seasonal_trend(gappy)["p_monthly_ar1"] is None
+
+
+def test_soil_water_restricted_to_forcing_regime():
+    from paradox import pipeline
+    idx = pd.date_range("2000-01-01", periods=312, freq="MS")
+    y = pd.Series(np.random.default_rng(3).standard_normal(312) + 100, idx)
+    tr, var_rec, row, _ = pipeline._analyse(("soil_water_0_200cm", "r", y, "mm", ("2000-01", "2017-12"), False))
+    assert tr["window"] == ["2012-01-01", "2024-06-01"] and tr["n"] == 150
+    tr_p, *_ = pipeline._analyse(("Rainf_f_tavg", "r", y, "mm", ("2000-01", "2017-12"), False))
+    assert tr_p["window"] == ["2000-01-01", "2025-12-01"]
+    assert pipeline.homogeneity_note("soil_water_0_200cm")["window"] == ["2012-01", "2024-06"]

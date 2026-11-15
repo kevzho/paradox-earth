@@ -15,6 +15,11 @@ import xarray as xr
 
 DATASET = "GLDAS_NOAH025_M"
 GRID_DEG = 0.25  # native spacing; used when an axis has a single cell and the spacing cannot be inferred
+EARTH_RADIUS_KM = 6371.0
+# Noah stores land-ice (glacier) cells at full saturation, i.e. 100+300+600+1000 = 2000 mm over 0-200 cm, constant in
+# time; ordinary soil saturates at porosity x depth (~1000 mm). Cells above this are ice, not a soil-water signal.
+ICE_SOIL_MM = 1500.0
+ICE_MASKED = ["soil_water_0_200cm", "land_water_store"]  # variables whose ice-cell values are not meaningful
 VERSION = "2.1"
 
 STORAGE_VARS = ["SoilMoi0_10cm_inst", "SoilMoi10_40cm_inst", "SoilMoi40_100cm_inst",
@@ -85,6 +90,24 @@ def to_monthly_water_units(ds: xr.Dataset) -> xr.Dataset:
     return out
 
 
+def land_ice_masks(ds: xr.Dataset):
+    """(land, ice) boolean (lat, lon) masks from one month: land = Noah soil cells (excludes ocean and inland water);
+    ice = land cells with soil water above ICE_SOIL_MM (glaciers / ice sheets)."""
+    soil = ds["soil_water_0_200cm"].isel(time=0).values
+    land = np.isfinite(soil)
+    return land, land & (np.nan_to_num(soil) > ICE_SOIL_MM)
+
+
+def apply_masks(ds: xr.Dataset, land: np.ndarray, ice: np.ndarray, variables) -> xr.Dataset:
+    """Restrict `variables` to land cells, and ICE_MASKED ones additionally to non-ice cells."""
+    ds = ds.copy()
+    for v in variables:
+        if v in ds:
+            keep = land & ~ice if v in ICE_MASKED else land
+            ds[v] = ds[v].where(xr.DataArray(keep, dims=("lat", "lon")))
+    return ds
+
+
 def add_derived(ds: xr.Dataset) -> xr.Dataset:
     """Soil-water storage target (Manifest §10.2) and net flux. Not total terrestrial water storage."""
     ds = ds.copy()
@@ -145,9 +168,12 @@ class TileGrid:
         self.ids = [f"tile_{a:+07.2f}_{b:+08.2f}" for a, b in corners]
         self.boxes = {rid: (b, a, b + tile_deg, a + tile_deg) for rid, (a, b) in zip(self.ids, corners)}
         self.cell_weight = np.broadcast_to(np.cos(np.deg2rad(lat))[:, None], self.shape).ravel()
+        dlat, dlon = np.deg2rad(spacing)
+        band = np.sin(np.deg2rad(lat) + dlat / 2) - np.sin(np.deg2rad(lat) - dlat / 2)
+        self.cell_area_km2 = np.broadcast_to((EARTH_RADIUS_KM ** 2 * dlon * band)[:, None], self.shape).ravel()
         # tiles cut by the domain edge (a bbox not aligned to tile_deg) would otherwise pass the coverage gate as if
         # they were full tiles, because coverage is measured against cells present; keep only complete tiles
-        n_cells = int(round(steps[0])) * int(round(steps[1]))
+        n_cells = self.n_cells = int(round(steps[0])) * int(round(steps[1]))
         self.complete = np.bincount(self.cell_tile, minlength=len(self.ids)) == n_cells
         self.boxes = {rid: box for (rid, box), ok in zip(self.boxes.items(), self.complete) if ok}
 
@@ -159,6 +185,10 @@ class TileGrid:
         sw = np.bincount(self.cell_tile[ok], weights=self.cell_weight[ok], minlength=n)
         swx = np.bincount(self.cell_tile[ok], weights=self.cell_weight[ok] * v[ok], minlength=n)
         return swx, sw
+
+    def tile_totals(self, cell_values: np.ndarray) -> np.ndarray:
+        """Per-tile sum of a per-cell quantity (flattened or (lat, lon))."""
+        return np.bincount(self.cell_tile, weights=np.asarray(cell_values, float).ravel(), minlength=len(self.ids))
 
     def matches(self, lat, lon) -> bool:
         return np.array_equal(np.asarray(lat, float), self.lat) and np.array_equal(np.asarray(lon, float), self.lon)
@@ -182,6 +212,10 @@ class TileAccumulator:
                 self.swx[v].append(swx)
                 self.sw[v].append(sw)
                 self.ever[v] |= np.isfinite(field).ravel()
+
+    def valid_area_km2(self, v: str) -> np.ndarray:
+        """Per-tile area of cells ever valid for `v` (true spherical cell areas): the weight for land aggregates."""
+        return self.grid.tile_totals(self.grid.cell_area_km2 * self.ever[v])
 
     def finalize(self, min_coverage: float = 0.5) -> dict[str, pd.DataFrame]:
         g, idx = self.grid, pd.DatetimeIndex(self.times, name="time")

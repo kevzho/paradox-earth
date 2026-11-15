@@ -16,13 +16,32 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from . import gldas, qc, seasonal, spatial, trend, variability
+from . import gldas, headline, qc, seasonal, spatial, trend, variability
 from .contract import SourceManifest, analysis_record, file_checksum, write_json
 
 if TYPE_CHECKING:  # torch is imported only when the PINN runs, never in the stats worker processes
     from .pinn import PINNConfig
 
-STATS_VARS = ("soil_water_0_200cm", "Rainf_f_tavg")
+STATS_VARS = ("Rainf_f_tavg", "soil_water_0_200cm")
+FLAGSHIP = "Rainf_f_tavg"  # precipitation (rain + snow): the flagship variable for the headline summary
+
+# Homogeneity (§5, S1). GLDAS-2.1 radiation forcing changes (README_GLDAS2 §1.2.3, §1.5.3): an AGRMET shift detected
+# as a step at 2010-08, and the WWMCA degradation from 2024-07 followed by GALWEM radiation from 2025-06-09. Soil
+# water and other model states inherit these steps, so their statistics are restricted to one forcing regime (with
+# ~17 months spin-up after the 2010-08 step). Precipitation (GPCP-based) shows no step at these dates: full record.
+FORCING_SOURCE = "https://hydro1.gesdisc.eosdis.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/doc/README_GLDAS2.pdf"
+DOCUMENTED_FORCING_EVENTS = {"2010-08": "AGRMET radiation shift (README 1.5.3; step detected in SWdown/LWdown)",
+                             "2024-07": "WWMCA radiation degraded, decommissioned summer 2024 (README 1.2.3)",
+                             "2025-06": "GALWEM radiation from 2025-06-09 (README 1.2.3)"}
+ANALYSIS_WINDOWS = {"soil_water_0_200cm": ("2012-01", "2024-06"), "land_water_store": ("2012-01", "2024-06")}
+
+
+def homogeneity_note(var: str) -> dict:
+    window = ANALYSIS_WINDOWS.get(var)
+    return {"window": list(window) if window else None,
+            "policy": ("single forcing regime: statistics use this window only; the climatology reference is the window"
+                       if window else "full record: no step at documented forcing dates in land-mean precipitation"),
+            "documented_forcing_events": DOCUMENTED_FORCING_EVENTS, "source": FORCING_SOURCE}
 PINN_VARS = ["land_water_store", "Rainf_f_tavg", "Evap_tavg", "runoff", "Tair_f_inst"]  # pinn.CHANNELS order
 
 
@@ -66,10 +85,18 @@ def ingest(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, min_
            pinn=True, pinn_coarsen=1) -> Ingested:
     out_dir = Path(out_dir)
     files = gldas.list_files(raw_dir)
-    grid = qacc = tacc = pacc = None
+    grid = qacc = tacc = pacc = land = ice = None
     title, units = "", {}
     for k, f in enumerate(files):
-        m = gldas.add_derived(gldas.to_monthly_water_units(gldas.load_file(f, bbox=bbox)))
+        raw = gldas.add_derived(gldas.to_monthly_water_units(gldas.load_file(f, bbox=bbox)))
+        if grid is None:
+            land, ice = gldas.land_ice_masks(raw)
+            ice_lo = np.full(int(ice.sum()), np.inf)
+            ice_hi = np.full(int(ice.sum()), -np.inf)
+        # QC sees the raw fields; statistics and the PINN see land-only fields with ice cells masked where meaningless
+        m = gldas.apply_masks(raw, land, ice, list(variables) + PINN_VARS)
+        soil_ice = raw["soil_water_0_200cm"].values[:, ice]
+        ice_lo, ice_hi = np.fmin(ice_lo, np.nanmin(soil_ice, 0)), np.fmax(ice_hi, np.nanmax(soil_ice, 0))
         if grid is None:
             grid = gldas.TileGrid(m.lat.values, m.lon.values, tile_deg)
             qacc = qc.QCAccumulator([v for v in gldas.ALL_VARS if v in m])
@@ -78,7 +105,7 @@ def ingest(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, min_
             title, units = m.attrs.get("title", ""), {v: m[v].attrs.get("units", "") for v in variables}
         elif not grid.matches(m.lat.values, m.lon.values):
             raise ValueError(f"{f.name}: grid differs from {files[0].name}")
-        qacc.update(m)
+        qacc.update(raw)
         tacc.update(m)
         if pacc is not None:
             pacc.update(m)
@@ -86,6 +113,12 @@ def ingest(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, min_
             print(f"ingest: {k + 1}/{len(files)} files", flush=True)
 
     report = qacc.report()
+    report["masks"] = {
+        "land_cells": int(land.sum()), "ice_cells": int(ice.sum()), "ice_threshold_mm": gldas.ICE_SOIL_MM,
+        "ice_masked_variables": gldas.ICE_MASKED,
+        "ice_soil_water_max_range_mm": float(np.max(ice_hi - ice_lo)) if ice.any() else None,
+        "rule": "land = Noah soil cells (no ocean/inland water) for every statistic; ice = soil water > threshold in "
+                "the first month, excluded from ICE_MASKED variables (constant at saturation, not a signal)"}
     series = tacc.finalize(min_coverage)
     t = report["chronology"]
     manifest = SourceManifest(
@@ -105,8 +138,15 @@ def ingest(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, min_
     for var, df in series.items():
         df.to_csv(out_dir / f"regional_{var}.csv")
     used = sorted(set().union(*(df.columns for df in series.values())))
-    pd.DataFrame([(rid, *grid.boxes[rid]) for rid in used], columns=["region_id", "west", "south", "east", "north"]
-                 ).to_csv(out_dir / "tiles.csv", index=False)
+    pos = {rid: i for i, rid in enumerate(grid.ids)}
+    idx = [pos[r] for r in used]
+    tiles = pd.DataFrame([(rid, *grid.boxes[rid]) for rid in used],
+                         columns=["region_id", "west", "south", "east", "north"])
+    tiles["land_frac"] = grid.tile_totals(land)[idx] / grid.n_cells
+    tiles["ice_frac"] = grid.tile_totals(ice)[idx] / grid.n_cells
+    for v in variables:  # aggregate weights: true area of the cells each variable is averaged over
+        tiles[f"area_km2__{v}"] = tacc.valid_area_km2(v)[idx]
+    tiles.to_csv(out_dir / "tiles.csv", index=False)
     return Ingested(series, units, report, mpath, grid, pacc)
 
 
@@ -122,9 +162,16 @@ def _attempt(fn, **fallback):
 def _analyse(job):
     """Stats for one region x variable. Runs in worker processes; each stage fails independently."""
     var, rid, y, units, ref_period, egarch = job
+    window = ANALYSIS_WINDOWS.get(var)
+    if window:  # one forcing regime; its own climatology reference (the global one straddles the forcing step)
+        y, ref_period = y.loc[window[0]:window[1]], None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         tr = _attempt(lambda: trend.seasonal_trend(y, units))  # trend is fitted on the raw series
+        if tr.get("status") == "ok":  # relative scale, so wet and dry climates are comparable on one map
+            mean = float(y.mean())
+            tr["series_mean"] = mean
+            tr["slope_pct_per_decade"] = 100.0 * tr["slope"] / mean if mean > 0 else None
         a = _attempt(lambda: seasonal.anomalies(y, ref_period))
         if "anomaly" not in a:
             emp, eg = dict(a), {"egarch_status": "unavailable", "reason": a["reason"]}
@@ -141,7 +188,8 @@ def _analyse(job):
                                           "asymmetry_gamma", "diagnostics", "gates", "reason"]},
     }
     var_rec["baseline_change"]["status"] = emp.get("status")
-    row = {"variable": var, "region_id": rid, "slope_per_decade": tr.get("slope"), "trend_p": tr.get("p_value"),
+    row = {"variable": var, "region_id": rid, "slope_per_decade": tr.get("slope"),
+           "slope_pct_per_decade": tr.get("slope_pct_per_decade"), "trend_p": tr.get("p_value"),
            "var_ratio": emp.get("variance_ratio_late_over_early"), "bf_p": emp.get("brown_forsythe_p"),
            "egarch_status": eg["egarch_status"]}
     # only gate-passing fits are exported as volatility paths (§6 S4: otherwise ship the empirical baseline)
@@ -175,7 +223,8 @@ def run_stats(series: dict, units: dict, out_dir, ref_period=None, manifest_path
     records, rows, vol = [], [], {v: {} for v in series}
     for (var, rid, *_), (tr, var_rec, row, cv) in zip(jobs, results):
         records.append(analysis_record(rid, gldas.DATASET, var, tr.get("window", [None, None]), trend=tr,
-                                       variability=var_rec, manifest_path=str(manifest_path)))
+                                       variability=var_rec, manifest_path=str(manifest_path),
+                                       quality={"homogeneity": homogeneity_note(var)}))
         rows.append(row)
         if cv is not None:
             vol[var][rid] = cv
@@ -220,10 +269,16 @@ def run_all(raw_dir, out_dir, bbox=None, tile_deg=1.0, variables=STATS_VARS, ref
         spatial_summary = spatial.run_spatial(records, pd.read_csv(out_dir / "tiles.csv"), out_dir,
                                               permutations=spatial_perms)
         write_json(out_dir / "records.json", records)
+    flagship = None
+    if spatial_perms and FLAGSHIP in variables:
+        try:  # the flagship summary must not cost the run
+            flagship = headline.build(out_dir, FLAGSHIP, workers=workers)
+        except Exception as e:  # noqa: BLE001
+            print(f"headline: failed ({type(e).__name__}: {e})", flush=True)
     pinn_res = run_pinn(ing.pinn, out_dir, pinn_cfg or PINNConfig(), lams) if pinn else None
     write_json(out_dir / "run_config.json",
                {"raw_dir": str(raw_dir), "bbox": bbox, "tile_deg": tile_deg, "variables": list(variables),
                 "ref_period": ref_period, "workers": workers,
                 "pinn": asdict(pinn_cfg or PINNConfig()) if pinn else None, "pinn_coarsen": pinn_coarsen,
                 "spatial_permutations": spatial_perms})
-    return {"qc": ing.report, "summary": summary, "spatial": spatial_summary, "pinn": pinn_res}
+    return {"qc": ing.report, "summary": summary, "spatial": spatial_summary, "headline": flagship, "pinn": pinn_res}
