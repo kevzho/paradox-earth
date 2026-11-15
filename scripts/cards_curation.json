@@ -1,0 +1,351 @@
+{
+  "_about": "Human-curated parts of the Paradox Earth Discovery Cards. scripts/build_cards.py matches each entry to a region in site/data/regions.json by trend sign and centroid proximity (so this file survives a re-export that reorders region ids). Numbers are NEVER typed here: every number on a card is computed from site/data at build time. All literature was checked against Crossref (DOI resolves, title/journal/year match) on 2026-11-15.",
+  "selection": {
+    "max_wetting": 3,
+    "max_drying": 3,
+    "default_max_dist_deg": 10.0
+  },
+  "regions": [
+    {
+      "key": "central_sahel",
+      "sign": "wetting",
+      "priority": 1,
+      "match": {
+        "centroid_lat": 13.5,
+        "centroid_lon": 17.2,
+        "max_dist_deg": 8.0
+      },
+      "title": "The central Sahel got wetter, 2000-2025",
+      "place": "Central Sahel (Chad and eastern Niger)",
+      "user": {
+        "who": "An agricultural extension office in the central Sahel (e.g. a district extension team in Chad)",
+        "decision": "Which millet and sorghum varieties and sowing windows to recommend to smallholders for the coming rainy season",
+        "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative; a detectable wetting trend supports testing longer-cycle varieties, while year-to-year variability still argues for drought-hedged recommendations."
+      },
+      "literature": [
+        {
+          "citation": "Biasutti, M. (2019). Rainfall trends in the African Sahel: Characteristics, processes, and causes. WIREs Climate Change, 10(4), e591.",
+          "url_or_doi": "https://doi.org/10.1002/wcc.591",
+          "agrees": true,
+          "note": "Reviews the partial recovery of Sahel rainfall since the 1980s drought, stronger in the central/eastern Sahel."
+        }
+      ],
+      "caveats": [
+        "Percent changes look large in arid places because the baseline is small; read the mm/month figure alongside the percentage.",
+        "Sahel rainfall recovery is partial and uneven; the western Sahel has recovered less than the centre.",
+        "A wetter seasonal total can co-occur with more intense, less frequent storms; totals alone do not describe planting risk."
+      ],
+      "map_label": "Central Sahel"
+    },
+    {
+      "key": "north_china",
+      "sign": "wetting",
+      "priority": 2,
+      "match": {
+        "centroid_lat": 42.4,
+        "centroid_lon": 118.8,
+        "max_dist_deg": 10.0
+      },
+      "title": "North China and Mongolia got wetter, 2000-2025",
+      "place": "Northern and northeastern China and eastern Mongolia",
+      "user": {
+        "who": "A water-resources bureau in Inner Mongolia or northeast China (e.g. the Liao River basin)",
+        "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
+        "why_it_matters": "A detectable wetting trend changes both sides of the ledger: more recharge opportunity, but also more flood-season water to route safely through cities."
+      },
+      "literature": [
+        {
+          "citation": "Wu, K., Liu, H., Zhao, L., Lin, Y., & Yang, Z. (2022). The strengthening relationship between summer rainfall over North China and PDO since the mid-2000s. Frontiers in Earth Science, 10, 957940.",
+          "url_or_doi": "https://doi.org/10.3389/feart.2022.957940",
+          "agrees": true,
+          "note": "Reports a significantly wetter period of North China summer rainfall since the mid-2000s, linked to the negative PDO phase (decadal variability, not necessarily a permanent trend)."
+        }
+      ],
+      "caveats": [
+        "The literature links this wetting to the Pacific Decadal Oscillation, so it may reverse when the PDO changes phase."
+      ],
+      "map_label": "North China"
+    },
+    {
+      "key": "nw_india_pakistan",
+      "sign": "wetting",
+      "priority": 3,
+      "match": {
+        "centroid_lat": 26.4,
+        "centroid_lon": 73.3,
+        "max_dist_deg": 8.0
+      },
+      "title": "The desert edge of the monsoon gets wetter",
+      "place": "Northwest India and Pakistan (Thar Desert and Indus plains)",
+      "user": {
+        "who": "A district disaster-management and irrigation planning office in Rajasthan or Sindh",
+        "decision": "Whether to invest in flood drainage and rain-fed kharif crop advisories, rather than only drought relief, in a historically arid district",
+        "why_it_matters": "Infrastructure in arid districts was designed for scarcity; a detectable wetting trend means more monsoon water arriving where drainage and crop calendars were not planned for it."
+      },
+      "literature": [
+        {
+          "citation": "Joseph, L., Skliris, N., Dey, D., Marsh, R., Hirschi, J., et al. (2024). Increased Summer Monsoon Rainfall Over Northwest India Caused by Hadley Cell Expansion and Indian Ocean Warming. Geophysical Research Letters, 51, e2024GL108829.",
+          "url_or_doi": "https://doi.org/10.1029/2024GL108829",
+          "agrees": true,
+          "note": "Satellite-era summer monsoon rainfall over northwest India and Pakistan increased markedly since 1979."
+        },
+        {
+          "citation": "Jin, Q., & Wang, C. (2017). A revival of Indian summer monsoon rainfall since 2002. Nature Climate Change, 7, 587-594.",
+          "url_or_doi": "https://doi.org/10.1038/nclimate3348",
+          "agrees": "partly",
+          "note": "Finds an Indian monsoon rainfall increase since 2002, focused on north-central India rather than this exact region."
+        },
+        {
+          "citation": "Ullah, W., Karim, A., Ullah, S., et al. (2023). An increasing trend in daily monsoon precipitation extreme indices over Pakistan and its relationship with atmospheric circulations. Frontiers in Environmental Science, 11, 1228817.",
+          "url_or_doi": "https://doi.org/10.3389/fenvs.2023.1228817",
+          "agrees": "partly",
+          "note": "Increasing monsoon precipitation extremes over Pakistan; about extremes, not monthly totals."
+        }
+      ],
+      "caveats": [
+        "Percent changes look large in arid places because the baseline is small; check the mm/month figure too."
+      ],
+      "map_label": "NW India / Pakistan"
+    },
+    {
+      "key": "ne_siberia",
+      "sign": "wetting",
+      "priority": 4,
+      "match": {
+        "centroid_lat": 62.0,
+        "centroid_lon": 164.8,
+        "max_dist_deg": 10.0
+      },
+      "title": "Northeastern Siberia gets wetter",
+      "place": "Northeastern Siberia (Chukotka and Kamchatka hinterland)",
+      "user": {
+        "who": "A regional road and pipeline engineering authority in the Russian Far East",
+        "decision": "Design-rainfall and culvert standards for infrastructure built on permafrost",
+        "why_it_matters": "More summer water on thawing ground raises erosion and subsidence risk for roads and pipelines designed with older rainfall statistics."
+      },
+      "literature": [
+        {
+          "citation": "Sun, C., Liu, Y., & Zhang, J. (2020). Roles of Sea Surface Temperature Warming and Loss of Arctic Sea Ice in the Enhanced Summer Wetting Trend Over Northeastern Siberia During Recent Decades. Journal of Geophysical Research: Atmospheres, 125(18), e2020JD032557.",
+          "url_or_doi": "https://doi.org/10.1029/2020JD032557",
+          "agrees": true,
+          "note": "Documents a summer wetting trend over northeastern Siberia (55-70N, 100-170E) over recent decades."
+        }
+      ],
+      "caveats": [
+        "Rain-gauge coverage in northeastern Siberia is sparse, so the GPCP-based forcing leans on satellites and few stations."
+      ],
+      "map_label": "NE Siberia"
+    },
+    {
+      "key": "central_siberia",
+      "sign": "wetting",
+      "priority": 5,
+      "match": {
+        "centroid_lat": 67.6,
+        "centroid_lon": 87.4,
+        "max_dist_deg": 10.0
+      },
+      "title": "Central Siberia gets wetter",
+      "place": "Central Siberia (Taymyr and lower Yenisei)",
+      "user": {
+        "who": "A river-shipping and hydropower operator on the Yenisei",
+        "decision": "How to plan navigation-season dredging and reservoir flood-storage reserves",
+        "why_it_matters": "A wetter catchment shifts the balance between low-water navigation risk and spring-summer flood risk."
+      },
+      "literature": [
+        {
+          "citation": "Sun, C., Liu, Y., & Zhang, J. (2020). Roles of Sea Surface Temperature Warming and Loss of Arctic Sea Ice in the Enhanced Summer Wetting Trend Over Northeastern Siberia During Recent Decades. Journal of Geophysical Research: Atmospheres, 125(18), e2020JD032557.",
+          "url_or_doi": "https://doi.org/10.1029/2020JD032557",
+          "agrees": "partly",
+          "note": "Their wetting region (100-170E) lies east of this cluster; consistent in direction but not the same area."
+        }
+      ],
+      "caveats": [
+        "Sparse gauges and snowfall undercatch make Arctic precipitation trends harder to verify."
+      ],
+      "map_label": "Central Siberia"
+    },
+    {
+      "key": "western_sahel",
+      "sign": "wetting",
+      "priority": 6,
+      "match": {
+        "centroid_lat": 13.1,
+        "centroid_lon": -6.7,
+        "max_dist_deg": 6.0
+      },
+      "title": "Western Sahel wetting rebound",
+      "place": "Western Sahel (southern Mali and Burkina Faso)",
+      "user": {
+        "who": "An agricultural extension office in southern Mali",
+        "decision": "Sowing-date and variety advice for millet, sorghum and cotton farmers",
+        "why_it_matters": "A wetting rebound can justify longer-season varieties, but only if it holds up under the checks below."
+      },
+      "literature": [
+        {
+          "citation": "Biasutti, M. (2019). Rainfall trends in the African Sahel: Characteristics, processes, and causes. WIREs Climate Change, 10(4), e591.",
+          "url_or_doi": "https://doi.org/10.1002/wcc.591",
+          "agrees": "partly",
+          "note": "Recovery is documented across the Sahel but is weaker in the west than in the centre."
+        }
+      ],
+      "caveats": [],
+      "map_label": "Western Sahel"
+    },
+    {
+      "key": "chile_megadrought",
+      "sign": "drying",
+      "priority": 1,
+      "match": {
+        "centroid_lat": -40.0,
+        "centroid_lon": -71.5,
+        "max_dist_deg": 9.0
+      },
+      "title": "Drying along the southern Andes",
+      "place": "South-central Chile to southern Patagonia (34-54°S, Chile and western Argentina)",
+      "user": {
+        "who": "A hydropower and water planner for the Biobío-to-Aysén river basins (Chile)",
+        "decision": "How much water to allocate to irrigation and cities next season, and whether reservoir and desalination investments assume a drier baseline",
+        "why_it_matters": "If the drying is a persistent trend rather than a run of bad years, water rights and reservoir rules that assume a return to 20th-century rainfall will over-allocate water."
+      },
+      "literature": [
+        {
+          "citation": "Garreaud, R. D., Boisier, J. P., Rondanelli, R., Montecinos, A., Sepulveda, H. H., & Veloso-Aguila, D. (2020). The Central Chile Mega Drought (2010-2018): A climate dynamics perspective. International Journal of Climatology, 40(1), 421-439.",
+          "url_or_doi": "https://doi.org/10.1002/joc.6219",
+          "agrees": "partly",
+          "note": "Documents drying in central Chile (30-38°S); this cluster is mostly further south."
+        },
+        {
+          "citation": "Garreaud, R. D., Alvarez-Garreton, C., Barichivich, J., et al. (2017). The 2010-2015 megadrought in central Chile: impacts on regional hydroclimate and vegetation. Hydrology and Earth System Sciences, 21, 6307-6327.",
+          "url_or_doi": "https://doi.org/10.5194/hess-21-6307-2017",
+          "agrees": "partly",
+          "note": "Documents the megadrought core around 30-38S; this cluster extends further south into Patagonia."
+        }
+      ],
+      "caveats": [
+        "Only part of this cluster lies in the 30-38°S core of the central-Chile megadrought studied in the literature; most of it is south-central Chile and Patagonia.",
+        "The literature attributes part of the drought to natural variability; Paradox Earth does not attribute causes."
+      ],
+      "map_label": "S Chile / Patagonia"
+    },
+    {
+      "key": "southern_amazon",
+      "sign": "drying",
+      "priority": 2,
+      "match": {
+        "centroid_lat": -8.2,
+        "centroid_lon": -63.8,
+        "max_dist_deg": 8.0
+      },
+      "title": "The southwestern Amazon is drying",
+      "place": "Southwestern Amazon (Rondônia and southern Amazonas, Brazil)",
+      "user": {
+        "who": "An agricultural climate-risk zoning analyst for Rondônia (Brazil's western soy, maize and cattle frontier)",
+        "decision": "Which sowing windows and second-crop (safrinha) maize plantings to treat as high-risk in climate-risk zoning",
+        "why_it_matters": "The second crop depends on rain at the end of the wet season; a detectable drying trend argues for shorter-cycle varieties or more conservative planting calendars."
+      },
+      "literature": [
+        {
+          "citation": "Espinoza, J. C., Ronchail, J., Marengo, J. A., & Segura, H. (2019). Contrasting North-South changes in Amazon wet-day and dry-day frequency and related atmospheric features (1981-2017). Climate Dynamics, 52, 5413-5430.",
+          "url_or_doi": "https://doi.org/10.1007/s00382-018-4462-2",
+          "agrees": true,
+          "note": "Dry-day frequency increased significantly over the southern Amazon, while the north got wetter."
+        },
+        {
+          "citation": "Marengo, J. A., Jimenez, J. C., Espinoza, J. C., Cunha, A. P., & Aragao, L. E. O. (2022). Increased climate pressure on the agricultural frontier in the Eastern Amazonia-Cerrado transition zone. Scientific Reports, 12, 457.",
+          "url_or_doi": "https://doi.org/10.1038/s41598-021-04241-4",
+          "agrees": "partly",
+          "note": "Strongest drying is in the eastern Amazonia-Cerrado transition, east of this cluster."
+        },
+        {
+          "citation": "Marengo, J. A., Souza, C. M., Thonicke, K., et al. (2018). Changes in Climate and Land Use Over the Amazon Region: Current and Future Variability and Trends. Frontiers in Earth Science, 6, 228.",
+          "url_or_doi": "https://doi.org/10.3389/feart.2018.00228",
+          "agrees": "partly",
+          "note": "Review: longer dry seasons in the southern Amazon; rainfall trends vary by dataset and region."
+        }
+      ],
+      "caveats": [
+        "Land-use change and climate variability co-occur here; the trend is associated with, not attributed to, either."
+      ],
+      "map_label": "SW Amazon"
+    },
+    {
+      "key": "southern_congo_zambezi",
+      "sign": "drying",
+      "priority": 3,
+      "match": {
+        "centroid_lat": -16.4,
+        "centroid_lon": 29.4,
+        "max_dist_deg": 8.0
+      },
+      "title": "Drying along the middle Zambezi",
+      "place": "Middle Zambezi basin (southern Zambia and northern Zimbabwe)",
+      "user": {
+        "who": "A hydropower and water-allocation planner for Lake Kariba on the middle Zambezi (Zambia and Zimbabwe)",
+        "decision": "How much reservoir drawdown to allow for electricity generation versus holding storage against dry years",
+        "why_it_matters": "Zambia gets most of its electricity from hydropower; operating rules that assume past rainfall can empty reservoirs when a drying trend co-occurs with a dry year."
+      },
+      "literature": [
+        {
+          "citation": "Hua, W., Zhou, L., Chen, H., Nicholson, S. E., Raghavendra, A., & Jiang, Y. (2016). Possible causes of the Central Equatorial African long-term drought. Environmental Research Letters, 11, 124002.",
+          "url_or_doi": "https://doi.org/10.1088/1748-9326/11/12/124002",
+          "agrees": "partly",
+          "note": "Long-term drying over Central Equatorial Africa since the 1990s, mainly April-June and centred north of this cluster."
+        },
+        {
+          "citation": "Zhou, L., Tian, Y., Myneni, R. B., et al. (2014). Widespread decline of Congo rainforest greenness in the past decade. Nature, 509, 86-90.",
+          "url_or_doi": "https://doi.org/10.1038/nature13265",
+          "agrees": "partly",
+          "note": "Greenness decline consistent with decreasing rainfall over the Congo rainforest in 2000-2012; covers the forest core rather than the southern rim."
+        }
+      ],
+      "caveats": [
+        "Rain-gauge density in south-central Africa is among the lowest on Earth, so GPCP-based trends here carry extra uncertainty."
+      ],
+      "map_label": "Zambezi"
+    }
+  ],
+  "retraction": {
+    "title": "Paradox Earth caught a false trend",
+    "place": "Global land: soil water (GLDAS-2.1 Noah)",
+    "headline_template": "Paradox Earth caught a false trend: the apparent soil-water decline is a level shift around {breaks} that lines up with documented changes in the model's radiation input, not a trend, so it is withdrawn.",
+    "user": {
+      "who": "Teachers and students using the Paradox Earth explorer",
+      "decision": "Whether to trust a dramatic trend line before checking how the data were made",
+      "why_it_matters": "A tool that rejects its own most exciting result shows why every trend needs a homogeneity check, not just a p-value."
+    },
+    "literature": [
+      {
+        "citation": "NASA GES DISC. README Document for NASA GLDAS Version 2 Data Products (GLDAS-2.1 forcing section).",
+        "url_or_doi": "https://hydro1.gesdisc.eosdis.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/doc/README_GLDAS2.pdf",
+        "agrees": true,
+        "note": "States that the bias-correction scaling 'is unable to correct an apparent shift (of unknown origin) in the AGRMET climatology after 2011' for the radiation forcing."
+      },
+      {
+        "citation": "Rodell, M., Houser, P. R., Jambor, U., et al. (2004). The Global Land Data Assimilation System. Bulletin of the American Meteorological Society, 85(3), 381-394.",
+        "url_or_doi": "https://doi.org/10.1175/BAMS-85-3-381",
+        "agrees": "partly",
+        "note": "Describes GLDAS as a model driven by changing observation-based forcing, which is why its outputs need homogeneity checks before trend analysis."
+      }
+    ],
+    "caveats": [
+      "Withdrawn as a trend: the soil-water series is shown only as an example of a data artefact.",
+      "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break."
+    ]
+  },
+  "local": {
+    "todo": true,
+    "title": "TODO: your local region",
+    "place": "TODO: team to choose (e.g. the city or watershed of the local Space Apps event)",
+    "bbox": null,
+    "user": {
+      "who": "TODO: a named local user (e.g. the city water utility or county extension office)",
+      "decision": "TODO: the concrete decision this trend informs",
+      "why_it_matters": "TODO: one sentence on why the local trend changes that decision"
+    },
+    "literature": [],
+    "caveats": [
+      "Placeholder card: set local.bbox to [west, south, east, north] in scripts/cards_curation.json and re-run scripts/build_cards.py to fill it with computed numbers."
+    ]
+  }
+}

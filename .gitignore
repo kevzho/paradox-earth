@@ -10,3 +10,5 @@ outputs*/
 *.nc
 .pytest_cache/
 data/*.log
+demo/review/
+scripts/__pycache__/

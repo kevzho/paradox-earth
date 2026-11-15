@@ -105,7 +105,7 @@ def main():
 
     a, g = head["aggregate"], head["regional"]
     meta = {
-        "project": "Paradox Earth", "tagline": "The planet is changing. The averages are hiding the story.",
+        "project": "Paradox Earth", "tagline": "The global average looks flat. A few regions are not.",
         "challenge": "Be An Earth System Trend Detective! (NASA Space Apps Challenge 2026)",
         "dataset": {"name": "GLDAS-2.1 Noah Land Surface Model L4 monthly 0.25 x 0.25 degree",
                     "short_name": "GLDAS_NOAH025_M", "version": "2.1", "doi": "10.5067/SXAVCZFAQLNO",
@@ -124,12 +124,13 @@ def main():
             "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
             "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
             "Tile shares are after false-discovery correction; individual tiles can still be false positives."],
-        "retraction": ("Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks "
+        "retraction": {"breakpoints": ["2010-08", "2024-07"], "window": ["2012-01", "2024-06"], "text": (
+                       "Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks "
                        "showed it is mostly two level shifts that follow documented changes in the radiation data "
                        "driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC "
                        "README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is "
                        "not significant, so the trend was withdrawn and soil water is analysed only inside that "
-                       "window."),
+                       "window.")},
     }
     write_json(data / "meta.json", meta)
     print(f"exported {len(ids)} tiles, {len(blocks)} series blocks, "

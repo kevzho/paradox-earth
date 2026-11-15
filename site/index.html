@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paradox Earth</title>
+<meta name="description" content="An automated trend detective for NASA GLDAS-2.1 precipitation that grades its own evidence: the global average hides regional wetting and drying.">
+<meta name="theme-color" content="#070d18">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230e1726' stroke='%234ba3e3' stroke-width='2'/%3E%3Cpath d='M16 2a14 14 0 0 1 0 28z' fill='%23e39a3b'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a class="wordmark" href="#explorer" aria-label="Paradox Earth, back to the explorer">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 3a13 13 0 0 1 0 26z" fill="var(--dry)"/><path d="M16 3a13 13 0 0 0 0 26z" fill="var(--wet)" opacity=".85"/></svg>
+    <span>Paradox Earth</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#explorer">Explorer</a>
+    <a href="#cases">Case files</a>
+    <a href="#method">Method<span class="nav-long"> &amp; limits</span></a>
+  </nav>
+</header>
+
+<main id="main">
+  <section id="explorer" class="explorer" aria-label="Explorer">
+    <div class="stage" id="stage">
+      <div class="stage-canvas" id="globe" aria-hidden="true"></div>
+      <canvas class="stage-canvas" id="flat" hidden aria-hidden="true"></canvas>
+      <div class="stage-focus" id="stageFocus" tabindex="0" role="application"
+           aria-label="Precipitation trend map. Arrow keys move the view, plus and minus zoom, Enter inspects the tile under the crosshair."
+           aria-describedby="stageHint"></div>
+      <div class="crosshair" aria-hidden="true"></div>
+
+      <div class="controls">
+        <fieldset class="seg" id="layerSeg">
+          <legend class="sr-only">Map layer</legend>
+          <label><input type="radio" name="layer" value="sig" checked><span>Significant trend</span></label>
+          <label><input type="radio" name="layer" value="pct"><span>% per decade</span></label>
+          <label><input type="radio" name="layer" value="lisa"><span>Clusters</span></label>
+        </fieldset>
+        <button class="chip-btn" id="viewToggle" type="button" aria-pressed="false">Flat map</button>
+      </div>
+
+      <div class="legend" id="legend" aria-live="polite"></div>
+      <div class="zoom" id="zoomBtns">
+        <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+        <button type="button" data-zoom="out" aria-label="Zoom out">&minus;</button>
+      </div>
+      <p class="hint" id="stageHint">Drag to move · scroll to zoom · click a tile for its evidence</p>
+      <div class="tooltip" id="tooltip" role="status" hidden></div>
+      <div class="loading" id="loading">Loading NASA precipitation data…</div>
+    </div>
+
+    <aside class="panel" id="panel" aria-live="polite" aria-label="Evidence panel"></aside>
+  </section>
+
+  <section id="cases" class="cases" aria-labelledby="casesTitle">
+    <div class="section-head">
+      <p class="eyebrow">Case files</p>
+      <h2 id="casesTitle">Every discovery comes with its own evidence grade</h2>
+      <p class="lede">The detector checks each pattern four ways: does it survive correction for testing thousands of tiles, does it hold in shorter time windows, do two definitions of “neighbour” agree it is a cluster, and does independent research see it too. It reports what passes, and what does not.</p>
+    </div>
+    <div id="caseNotice" class="notice" hidden></div>
+    <div id="featured" class="featured"></div>
+    <div id="cardGrid" class="card-grid"></div>
+  </section>
+
+  <section id="method" class="method" aria-labelledby="methodTitle">
+    <div class="section-head">
+      <p class="eyebrow">Method &amp; limits</p>
+      <h2 id="methodTitle">What the detector does, and what it cannot tell you</h2>
+    </div>
+    <div class="method-grid">
+      <div>
+        <h3>Method</h3>
+        <dl id="methodList" class="dl"></dl>
+      </div>
+      <div>
+        <h3>Does the answer depend on the time window?</h3>
+        <div class="table-wrap"><table id="windowTable"><caption class="sr-only">Global result in different time windows</caption></table></div>
+        <h3>Limits</h3>
+        <ul id="caveatList" class="caveats"></ul>
+      </div>
+    </div>
+    <div class="credits">
+      <div>
+        <h3>NASA data that makes this possible</h3>
+        <p id="dataCredit"></p>
+      </div>
+      <div>
+        <h3>Team</h3>
+        <p id="teamLine">Team details load from the project repository.</p>
+      </div>
+      <div>
+        <h3>AI disclosure</h3>
+        <p>Code for this site was written with help from an AI coding assistant. Every map, chart and number is computed from the NASA data shown here; the site contains no AI-generated images. Not affiliated with or endorsed by NASA.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.46.2/dist/globe.gl.min.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

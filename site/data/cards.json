@@ -1,0 +1,583 @@
+{
+ "generated_utc": "2026-11-15T17:22:31Z",
+ "generator": "scripts/build_cards.py",
+ "dataset": {
+  "short_name": "GLDAS_NOAH025_M",
+  "version": "2.1",
+  "doi": "10.5067/SXAVCZFAQLNO",
+  "variable": "Rainf_f_tavg",
+  "period": [
+   "2000-01",
+   "2025-12"
+  ]
+ },
+ "status_legend": {
+  "pass": "check supports the trend",
+  "partial": "mixed or weaker support",
+  "fail": "check contradicts the trend",
+  "not_run": "not evaluated in this export"
+ },
+ "cards": [
+  {
+   "id": "wetting-central_sahel",
+   "kind": "wetting",
+   "region_id": "up3",
+   "title": "The central Sahel got wetter, 2000-2025",
+   "place": "Central Sahel (Chad and eastern Niger)",
+   "headline": "Across 48 one-degree land tiles (about 567,000 km²) in Central Sahel (Chad and eastern Niger), GLDAS-2.1 precipitation shows a detectable wetting trend of +48.5% per decade (+3.52 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": 48.47,
+    "median_slope_per_decade": 3.519,
+    "area_km2": 566664.0,
+    "n_tiles": 48,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 48 of 48 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 48 tiles of OLS on annual means; overlapping windows) - 2000-2025: +48.4%/decade; 2003-2025: +50.0%/decade; 2000-2020: +37.5%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "pass",
+     "detail": "1 source(s): 1 agree, 0 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "An agricultural extension office in the central Sahel (e.g. a district extension team in Chad)",
+    "decision": "Which millet and sorghum varieties and sowing windows to recommend to smallholders for the coming rainy season",
+    "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative; a detectable wetting trend supports testing longer-cycle varieties, while year-to-year variability still argues for drought-hedged recommendations."
+   },
+   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "literature": [
+    {
+     "citation": "Biasutti, M. (2019). Rainfall trends in the African Sahel: Characteristics, processes, and causes. WIREs Climate Change, 10(4), e591.",
+     "url_or_doi": "https://doi.org/10.1002/wcc.591",
+     "agrees": true,
+     "note": "Reviews the partial recovery of Sahel rainfall since the 1980s drought, stronger in the central/eastern Sahel."
+    }
+   ],
+   "caveats": [
+    "Percent changes look large in arid places because the baseline is small; read the mm/month figure alongside the percentage.",
+    "Sahel rainfall recovery is partial and uneven; the western Sahel has recovered less than the centre.",
+    "A wetter seasonal total can co-occur with more intense, less frequent storms; totals alone do not describe planting risk.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    16.68,
+    15.52
+   ],
+   "bbox": [
+    10.0,
+    13.0,
+    23.0,
+    22.0
+   ]
+  },
+  {
+   "id": "wetting-north_china",
+   "kind": "wetting",
+   "region_id": "up1",
+   "title": "North China and Mongolia got wetter, 2000-2025",
+   "place": "Northern and northeastern China and eastern Mongolia",
+   "headline": "Across 143 one-degree land tiles (about 1.3 million km²) in Northern and northeastern China and eastern Mongolia, GLDAS-2.1 precipitation shows a detectable wetting trend of +20.0% per decade (+6.72 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": 20.02,
+    "median_slope_per_decade": 6.724,
+    "area_km2": 1252040.0,
+    "n_tiles": 143,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 143 of 143 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 143 tiles of OLS on annual means; overlapping windows) - 2000-2025: +20.0%/decade; 2003-2025: +20.0%/decade; 2000-2020: +16.7%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "pass",
+     "detail": "1 source(s): 1 agree, 0 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "A water-resources bureau in Inner Mongolia or northeast China (e.g. the Liao River basin)",
+    "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
+    "why_it_matters": "A detectable wetting trend changes both sides of the ledger: more recharge opportunity, but also more flood-season water to route safely through cities."
+   },
+   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "literature": [
+    {
+     "citation": "Wu, K., Liu, H., Zhao, L., Lin, Y., & Yang, Z. (2022). The strengthening relationship between summer rainfall over North China and PDO since the mid-2000s. Frontiers in Earth Science, 10, 957940.",
+     "url_or_doi": "https://doi.org/10.3389/feart.2022.957940",
+     "agrees": true,
+     "note": "Reports a significantly wetter period of North China summer rainfall since the mid-2000s, linked to the negative PDO phase (decadal variability, not necessarily a permanent trend)."
+    }
+   ],
+   "caveats": [
+    "The literature links this wetting to the Pacific Decadal Oscillation, so it may reverse when the PDO changes phase.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    44.39,
+    115.51
+   ],
+   "bbox": [
+    102.0,
+    38.0,
+    129.0,
+    51.0
+   ]
+  },
+  {
+   "id": "wetting-nw_india_pakistan",
+   "kind": "wetting",
+   "region_id": "up4",
+   "title": "The desert edge of the monsoon gets wetter",
+   "place": "Northwest India and Pakistan (Thar Desert and Indus plains)",
+   "headline": "Across 32 one-degree land tiles (about 353,000 km²) in Northwest India and Pakistan (Thar Desert and Indus plains), GLDAS-2.1 precipitation shows a detectable wetting trend of +25.1% per decade (+11.35 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": 25.09,
+    "median_slope_per_decade": 11.346,
+    "area_km2": 352942.0,
+    "n_tiles": 32,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 32 of 32 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 32 tiles of OLS on annual means; overlapping windows) - 2000-2025: +25.1%/decade; 2003-2025: +20.7%/decade; 2000-2020: +23.3%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as HH clusters; k-nearest-neighbour weights label 100% as HH, and 100% of the queen HH tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "pass",
+     "detail": "3 source(s): 1 agree, 2 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "A district disaster-management and irrigation planning office in Rajasthan or Sindh",
+    "decision": "Whether to invest in flood drainage and rain-fed kharif crop advisories, rather than only drought relief, in a historically arid district",
+    "why_it_matters": "Infrastructure in arid districts was designed for scarcity; a detectable wetting trend means more monsoon water arriving where drainage and crop calendars were not planned for it."
+   },
+   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "literature": [
+    {
+     "citation": "Joseph, L., Skliris, N., Dey, D., Marsh, R., Hirschi, J., et al. (2024). Increased Summer Monsoon Rainfall Over Northwest India Caused by Hadley Cell Expansion and Indian Ocean Warming. Geophysical Research Letters, 51, e2024GL108829.",
+     "url_or_doi": "https://doi.org/10.1029/2024GL108829",
+     "agrees": true,
+     "note": "Satellite-era summer monsoon rainfall over northwest India and Pakistan increased markedly since 1979."
+    },
+    {
+     "citation": "Jin, Q., & Wang, C. (2017). A revival of Indian summer monsoon rainfall since 2002. Nature Climate Change, 7, 587-594.",
+     "url_or_doi": "https://doi.org/10.1038/nclimate3348",
+     "agrees": "partly",
+     "note": "Finds an Indian monsoon rainfall increase since 2002, focused on north-central India rather than this exact region."
+    },
+    {
+     "citation": "Ullah, W., Karim, A., Ullah, S., et al. (2023). An increasing trend in daily monsoon precipitation extreme indices over Pakistan and its relationship with atmospheric circulations. Frontiers in Environmental Science, 11, 1228817.",
+     "url_or_doi": "https://doi.org/10.3389/fenvs.2023.1228817",
+     "agrees": "partly",
+     "note": "Increasing monsoon precipitation extremes over Pakistan; about extremes, not monthly totals."
+    }
+   ],
+   "caveats": [
+    "Percent changes look large in arid places because the baseline is small; check the mm/month figure too.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    26.78,
+    73.72
+   ],
+   "bbox": [
+    69.0,
+    23.0,
+    77.0,
+    31.0
+   ]
+  },
+  {
+   "id": "drying-chile_megadrought",
+   "kind": "drying",
+   "region_id": "down1",
+   "title": "Drying along the southern Andes",
+   "place": "South-central Chile to southern Patagonia (34-54°S, Chile and western Argentina)",
+   "headline": "Across 64 one-degree land tiles (about 511,000 km²) in South-central Chile to southern Patagonia (34-54°S, Chile and western Argentina), GLDAS-2.1 precipitation shows a detectable drying trend of -15.9% per decade (-10.51 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": -15.89,
+    "median_slope_per_decade": -10.509,
+    "area_km2": 510603.0,
+    "n_tiles": 64,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 64 of 64 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 64 tiles of OLS on annual means; overlapping windows) - 2000-2025: -15.9%/decade; 2003-2025: -12.3%/decade; 2000-2020: -17.1%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "partial",
+     "detail": "2 source(s): 0 agree, 2 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "A hydropower and water planner for the Biobío-to-Aysén river basins (Chile)",
+    "decision": "How much water to allocate to irrigation and cities next season, and whether reservoir and desalination investments assume a drier baseline",
+    "why_it_matters": "If the drying is a persistent trend rather than a run of bad years, water rights and reservoir rules that assume a return to 20th-century rainfall will over-allocate water."
+   },
+   "evidence_level": "supported: passes 2 of 3 extra checks",
+   "literature": [
+    {
+     "citation": "Garreaud, R. D., Boisier, J. P., Rondanelli, R., Montecinos, A., Sepulveda, H. H., & Veloso-Aguila, D. (2020). The Central Chile Mega Drought (2010-2018): A climate dynamics perspective. International Journal of Climatology, 40(1), 421-439.",
+     "url_or_doi": "https://doi.org/10.1002/joc.6219",
+     "agrees": "partly",
+     "note": "Documents drying in central Chile (30-38°S); this cluster is mostly further south."
+    },
+    {
+     "citation": "Garreaud, R. D., Alvarez-Garreton, C., Barichivich, J., et al. (2017). The 2010-2015 megadrought in central Chile: impacts on regional hydroclimate and vegetation. Hydrology and Earth System Sciences, 21, 6307-6327.",
+     "url_or_doi": "https://doi.org/10.5194/hess-21-6307-2017",
+     "agrees": "partly",
+     "note": "Documents the megadrought core around 30-38S; this cluster extends further south into Patagonia."
+    }
+   ],
+   "caveats": [
+    "Only part of this cluster lies in the 30-38°S core of the central-Chile megadrought studied in the literature; most of it is south-central Chile and Patagonia.",
+    "The literature attributes part of the drought to natural variability; Paradox Earth does not attribute causes.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    -43.74,
+    -71.49
+   ],
+   "bbox": [
+    -75.0,
+    -54.0,
+    -68.0,
+    -33.0
+   ]
+  },
+  {
+   "id": "drying-southern_amazon",
+   "kind": "drying",
+   "region_id": "down3",
+   "title": "The southwestern Amazon is drying",
+   "place": "Southwestern Amazon (Rondônia and southern Amazonas, Brazil)",
+   "headline": "Across 24 one-degree land tiles (about 294,000 km²) in Southwestern Amazon (Rondônia and southern Amazonas, Brazil), GLDAS-2.1 precipitation shows a detectable drying trend of -13.4% per decade (-23.96 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": -13.37,
+    "median_slope_per_decade": -23.96,
+    "area_km2": 293623.0,
+    "n_tiles": 24,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 24 of 24 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 24 tiles of OLS on annual means; overlapping windows) - 2000-2025: -13.4%/decade; 2003-2025: -14.2%/decade; 2000-2020: -8.5%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "pass",
+     "detail": "3 source(s): 1 agree, 2 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "An agricultural climate-risk zoning analyst for Rondônia (Brazil's western soy, maize and cattle frontier)",
+    "decision": "Which sowing windows and second-crop (safrinha) maize plantings to treat as high-risk in climate-risk zoning",
+    "why_it_matters": "The second crop depends on rain at the end of the wet season; a detectable drying trend argues for shorter-cycle varieties or more conservative planting calendars."
+   },
+   "evidence_level": "robust pattern: passes all 3 extra checks (shorter windows, two neighbour definitions, literature)",
+   "literature": [
+    {
+     "citation": "Espinoza, J. C., Ronchail, J., Marengo, J. A., & Segura, H. (2019). Contrasting North-South changes in Amazon wet-day and dry-day frequency and related atmospheric features (1981-2017). Climate Dynamics, 52, 5413-5430.",
+     "url_or_doi": "https://doi.org/10.1007/s00382-018-4462-2",
+     "agrees": true,
+     "note": "Dry-day frequency increased significantly over the southern Amazon, while the north got wetter."
+    },
+    {
+     "citation": "Marengo, J. A., Jimenez, J. C., Espinoza, J. C., Cunha, A. P., & Aragao, L. E. O. (2022). Increased climate pressure on the agricultural frontier in the Eastern Amazonia-Cerrado transition zone. Scientific Reports, 12, 457.",
+     "url_or_doi": "https://doi.org/10.1038/s41598-021-04241-4",
+     "agrees": "partly",
+     "note": "Strongest drying is in the eastern Amazonia-Cerrado transition, east of this cluster."
+    },
+    {
+     "citation": "Marengo, J. A., Souza, C. M., Thonicke, K., et al. (2018). Changes in Climate and Land Use Over the Amazon Region: Current and Future Variability and Trends. Frontiers in Earth Science, 6, 228.",
+     "url_or_doi": "https://doi.org/10.3389/feart.2018.00228",
+     "agrees": "partly",
+     "note": "Review: longer dry seasons in the southern Amazon; rainfall trends vary by dataset and region."
+    }
+   ],
+   "caveats": [
+    "Land-use change and climate variability co-occur here; the trend is associated with, not attributed to, either.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    -8.2,
+    -63.75
+   ],
+   "bbox": [
+    -67.0,
+    -11.0,
+    -60.0,
+    -5.0
+   ]
+  },
+  {
+   "id": "drying-southern_congo_zambezi",
+   "kind": "drying",
+   "region_id": "down4",
+   "title": "Drying along the middle Zambezi",
+   "place": "Middle Zambezi basin (southern Zambia and northern Zimbabwe)",
+   "headline": "Across 18 one-degree land tiles (about 210,000 km²) in Middle Zambezi basin (southern Zambia and northern Zimbabwe), GLDAS-2.1 precipitation shows a detectable drying trend of -20.9% per decade (-12.40 mm/month per decade, median tile, 2000-2025), with 100% of tiles significant after false-discovery correction.",
+   "numbers": {
+    "median_pct_per_decade": -20.95,
+    "median_slope_per_decade": -12.398,
+    "area_km2": 209759.0,
+    "n_tiles": 18,
+    "share_tiles_fdr_significant": 1.0
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "pass",
+     "detail": "Selection criterion (regions are built from these tiles, so this passes by design): 18 of 18 tiles (100%) significant with the matching sign after Benjamini-Hochberg false-discovery correction (q < 0.05).",
+     "role": "selection"
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "pass",
+     "detail": "Region trend (median over 18 tiles of OLS on annual means; overlapping windows) - 2000-2025: -20.9%/decade; 2003-2025: -23.3%/decade; 2000-2020: -13.0%/decade -> same sign, within a factor of 2. Global shares of significant land shrink in these windows (2003-2025: 1.3% wetting / 2.6% drying; 2000-2020: 0.7% wetting / 1.0% drying), but this region's trend keeps its sign and size."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "pass",
+     "detail": "Queen-contiguity LISA labels 100% of tiles as LL clusters; k-nearest-neighbour weights label 100% as LL, and 100% of the queen LL tiles keep their label under kNN."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "partial",
+     "detail": "2 source(s): 0 agree, 2 partly agree, 0 disagree."
+    }
+   ],
+   "user": {
+    "who": "A hydropower and water-allocation planner for Lake Kariba on the middle Zambezi (Zambia and Zimbabwe)",
+    "decision": "How much reservoir drawdown to allow for electricity generation versus holding storage against dry years",
+    "why_it_matters": "Zambia gets most of its electricity from hydropower; operating rules that assume past rainfall can empty reservoirs when a drying trend co-occurs with a dry year."
+   },
+   "evidence_level": "supported: passes 2 of 3 extra checks",
+   "literature": [
+    {
+     "citation": "Hua, W., Zhou, L., Chen, H., Nicholson, S. E., Raghavendra, A., & Jiang, Y. (2016). Possible causes of the Central Equatorial African long-term drought. Environmental Research Letters, 11, 124002.",
+     "url_or_doi": "https://doi.org/10.1088/1748-9326/11/12/124002",
+     "agrees": "partly",
+     "note": "Long-term drying over Central Equatorial Africa since the 1990s, mainly April-June and centred north of this cluster."
+    },
+    {
+     "citation": "Zhou, L., Tian, Y., Myneni, R. B., et al. (2014). Widespread decline of Congo rainforest greenness in the past decade. Nature, 509, 86-90.",
+     "url_or_doi": "https://doi.org/10.1038/nature13265",
+     "agrees": "partly",
+     "note": "Greenness decline consistent with decreasing rainfall over the Congo rainforest in 2000-2012; covers the forest core rather than the southern rim."
+    }
+   ],
+   "caveats": [
+    "Rain-gauge density in south-central Africa is among the lowest on Earth, so GPCP-based trends here carry extra uncertainty.",
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+   ],
+   "centroid": [
+    -16.37,
+    29.35
+   ],
+   "bbox": [
+    26.0,
+    -19.0,
+    32.0,
+    -14.0
+   ]
+  },
+  {
+   "id": "retraction-soil-water",
+   "kind": "retraction",
+   "region_id": null,
+   "title": "Paradox Earth caught a false trend",
+   "place": "Global land: soil water (GLDAS-2.1 Noah)",
+   "headline": "Paradox Earth caught a false trend: the apparent soil-water decline is a level shift around 2010-08 and 2024-07 that lines up with documented changes in the model's radiation input, not a trend, so it is withdrawn.",
+   "numbers": {
+    "median_pct_per_decade": null,
+    "median_slope_per_decade": null,
+    "area_km2": null,
+    "n_tiles": null,
+    "share_tiles_fdr_significant": null
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "not_run",
+     "detail": "Not graded: the series failed the homogeneity check first, so a trend p-value would be meaningless."
+    },
+    {
+     "check": "Homogeneity (break-point) check",
+     "status": "fail",
+     "detail": "Level shift detected around 2010-08 and 2024-07. Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window."
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "not_run",
+     "detail": "Not graded: a step change makes any window's slope depend on where the window sits relative to the break."
+    },
+    {
+     "check": "Agreement with independent documentation",
+     "status": "fail",
+     "detail": "README_GLDAS2 documents an apparent shift in the AGRMET radiation climatology (section 1.5.3; detected here as a step at 2010-08) and degraded WWMCA radiation from mid-2024 (section 1.2.3; step at 2024-07). The 'trend' lines up with these documented input changes."
+    }
+   ],
+   "user": {
+    "who": "Teachers and students using the Paradox Earth explorer",
+    "decision": "Whether to trust a dramatic trend line before checking how the data were made",
+    "why_it_matters": "A tool that rejects its own most exciting result shows why every trend needs a homogeneity check, not just a p-value."
+   },
+   "evidence_level": "withdrawn (data artefact caught by the detective)",
+   "literature": [
+    {
+     "citation": "NASA GES DISC. README Document for NASA GLDAS Version 2 Data Products (GLDAS-2.1 forcing section).",
+     "url_or_doi": "https://hydro1.gesdisc.eosdis.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/doc/README_GLDAS2.pdf",
+     "agrees": true,
+     "note": "States that the bias-correction scaling 'is unable to correct an apparent shift (of unknown origin) in the AGRMET climatology after 2011' for the radiation forcing."
+    },
+    {
+     "citation": "Rodell, M., Houser, P. R., Jambor, U., et al. (2004). The Global Land Data Assimilation System. Bulletin of the American Meteorological Society, 85(3), 381-394.",
+     "url_or_doi": "https://doi.org/10.1175/BAMS-85-3-381",
+     "agrees": "partly",
+     "note": "Describes GLDAS as a model driven by changing observation-based forcing, which is why its outputs need homogeneity checks before trend analysis."
+    }
+   ],
+   "caveats": [
+    "Withdrawn as a trend: the soil-water series is shown only as an example of a data artefact.",
+    "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break."
+   ],
+   "breakpoints": [
+    "2010-08",
+    "2024-07"
+   ]
+  },
+  {
+   "id": "local-placeholder",
+   "kind": "local",
+   "region_id": null,
+   "title": "TODO: your local region",
+   "place": "TODO: team to choose (e.g. the city or watershed of the local Space Apps event)",
+   "user": {
+    "who": "TODO: a named local user (e.g. the city water utility or county extension office)",
+    "decision": "TODO: the concrete decision this trend informs",
+    "why_it_matters": "TODO: one sentence on why the local trend changes that decision"
+   },
+   "literature": [],
+   "todo": true,
+   "bbox": null,
+   "headline": "TODO: choose the team's local region; this card fills itself from the data once a bounding box is set.",
+   "numbers": {
+    "median_pct_per_decade": null,
+    "median_slope_per_decade": null,
+    "area_km2": null,
+    "n_tiles": null,
+    "share_tiles_fdr_significant": null
+   },
+   "robustness": [
+    {
+     "check": "FDR-corrected significance",
+     "status": "not_run",
+     "detail": "Waiting for the team to choose a local region."
+    },
+    {
+     "check": "Stability across time windows",
+     "status": "not_run",
+     "detail": "Waiting for the team to choose a local region."
+    },
+    {
+     "check": "Agreement between neighbour definitions (queen vs kNN LISA)",
+     "status": "not_run",
+     "detail": "Waiting for the team to choose a local region."
+    },
+    {
+     "check": "Agreement with independent literature",
+     "status": "not_run",
+     "detail": "Waiting for the team to choose a local region."
+    }
+   ],
+   "evidence_level": "not yet evaluated",
+   "caveats": [
+    "Placeholder card: set local.bbox to [west, south, east, north] in scripts/cards_curation.json and re-run scripts/build_cards.py to fill it with computed numbers."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,121 @@
+{
+  "project": "Paradox Earth",
+  "tagline": "The global average looks flat. A few regions are not.",
+  "challenge": "Be An Earth System Trend Detective! (NASA Space Apps Challenge 2026)",
+  "dataset": {
+    "name": "GLDAS-2.1 Noah Land Surface Model L4 monthly 0.25 x 0.25 degree",
+    "short_name": "GLDAS_NOAH025_M",
+    "version": "2.1",
+    "doi": "10.5067/SXAVCZFAQLNO",
+    "provider": "NASA GES DISC",
+    "variable": "Rainf_f_tavg",
+    "variable_label": "Precipitation (rain + snow), GLDAS-2.1 forcing (GPCP-based)",
+    "units": "mm/month",
+    "period": [
+      "2000-01",
+      "2025-12"
+    ]
+  },
+  "tile_deg": 1.0,
+  "n_tiles": 17284,
+  "qc_passed": true,
+  "headline": {
+    "aggregate": {
+      "slope": -0.8842083845587811,
+      "ci95": [
+        -1.8838213451492745,
+        0.11540457603167159
+      ],
+      "p_value": 0.08006126711848888,
+      "n": 312,
+      "window": [
+        "2000-01-01",
+        "2025-12-01"
+      ],
+      "method": "OLS slope; p = max(AR(1)-parametric SE with bias-corrected rho [t(n-k)], annual-mean OLS with AR(1) n_eff [Santer 2000]) (intersection-union)",
+      "mean": 69.86427414739127,
+      "slope_pct_per_decade": -1.2656087755143413
+    },
+    "regional": {
+      "n_tiles_tested": 17284,
+      "land_area_tested_km2": 133129322.43319406,
+      "alpha_fdr": 0.05,
+      "share_tiles_up": 0.053691275167785234,
+      "share_tiles_down": 0.027308493404304558,
+      "share_area_up": 0.0426827574611096,
+      "share_area_down": 0.03149036760015434,
+      "area_up_km2": 5682326.580377879,
+      "area_down_km2": 4192291.3017807547,
+      "share_tiles_raw_p_below_alpha": 0.24091645452441565
+    },
+    "windows": {
+      "2003-2025": {
+        "window": [
+          "2003-01",
+          "2025-12"
+        ],
+        "aggregate_slope": -1.0009424392741888,
+        "aggregate_ci95": [
+          -2.126437906748335,
+          0.12455302819996406
+        ],
+        "aggregate_p": 0.07847776392467312,
+        "n_tiles_tested": 17284,
+        "land_area_tested_km2": 133129322.43319406,
+        "alpha_fdr": 0.05,
+        "share_tiles_up": 0.02603563989817172,
+        "share_tiles_down": 0.024010645683869476,
+        "share_area_up": 0.013091824629548474,
+        "share_area_down": 0.02630884817175565,
+        "area_up_km2": 1742905.7423459901,
+        "area_down_km2": 3502479.131103606,
+        "share_tiles_raw_p_below_alpha": 0.21077296922008795
+      },
+      "2000-2020": {
+        "window": [
+          "2000-01",
+          "2020-12"
+        ],
+        "aggregate_slope": -0.8410568009382674,
+        "aggregate_ci95": [
+          -2.4455205629704504,
+          0.7634069610938695
+        ],
+        "aggregate_p": 0.27877292729833997,
+        "n_tiles_tested": 17284,
+        "land_area_tested_km2": 133129322.43319406,
+        "alpha_fdr": 0.05,
+        "share_tiles_up": 0.012207822263364962,
+        "share_tiles_down": 0.010819254802129136,
+        "share_area_up": 0.007473153928331191,
+        "share_area_down": 0.009698715006810509,
+        "area_up_km2": 994895.9189176939,
+        "area_down_km2": 1291183.3573293341,
+        "share_tiles_raw_p_below_alpha": 0.1721245082156908
+      }
+    },
+    "weights": "true land area of valid cells (area_km2__Rainf_f_tavg)"
+  },
+  "methods": {
+    "trend": "OLS slope; p = max(AR(1)-parametric SE with bias-corrected rho [t(n-k)], annual-mean OLS with AR(1) n_eff [Santer 2000]) (intersection-union)",
+    "multiple_testing": "Benjamini-Hochberg FDR across tiles, q < 0.05",
+    "spatial": "local Moran's I (LISA) on trend_slope_pct, 9,999 conditional permutations, BH-FDR; queen weights with dateline wrap; kNN and Getis-Ord Gi* robustness",
+    "regions": "connected (8-neighbour, dateline-aware) tiles labelled trend_slope_pct HH/LL by LISA AND BH-significant (q<0.05) with the matching sign; >= 5 tiles"
+  },
+  "caveats": [
+    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+    "Tile shares are after false-discovery correction; individual tiles can still be false positives."
+  ],
+  "retraction": {
+    "breakpoints": [
+      "2010-08",
+      "2024-07"
+    ],
+    "window": [
+      "2012-01",
+      "2024-06"
+    ],
+    "text": "Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window."
+  }
+}
