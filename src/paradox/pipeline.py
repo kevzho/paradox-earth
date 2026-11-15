@@ -149,14 +149,29 @@ def _analyse(job):
     return tr, var_rec, row, cv
 
 
+class _Serial:
+    """In-process stand-in for ProcessPoolExecutor (workers=1)."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def map(self, fn, items, chunksize=1):
+        return map(fn, items)
+
+
 def run_stats(series: dict, units: dict, out_dir, ref_period=None, manifest_path=None, egarch=True, workers=1):
     out_dir = Path(out_dir)
     jobs = [(var, rid, df[rid], units.get(var, ""), ref_period, egarch) for var, df in series.items() for rid in df]
-    if workers > 1:
-        with ProcessPoolExecutor(workers) as ex:
-            results = list(ex.map(_analyse, jobs, chunksize=max(1, len(jobs) // (workers * 8))))
-    else:
-        results = [_analyse(j) for j in jobs]
+    step = max(1, len(jobs) // 20)
+    results = []
+    with ProcessPoolExecutor(workers) if workers > 1 else _Serial() as ex:
+        for i, r in enumerate(ex.map(_analyse, jobs, chunksize=max(1, len(jobs) // (workers * 8))), 1):
+            results.append(r)
+            if i % step == 0 or i == len(jobs):
+                print(f"stats: {i}/{len(jobs)} series", flush=True)
     records, rows, vol = [], [], {v: {} for v in series}
     for (var, rid, *_), (tr, var_rec, row, cv) in zip(jobs, results):
         records.append(analysis_record(rid, gldas.DATASET, var, tr.get("window", [None, None]), trend=tr,
