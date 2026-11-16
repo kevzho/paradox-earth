@@ -290,8 +290,7 @@ from our own results.
 
 An AI coding assistant was used to help write and review code, to design and run the calibration simulations and
 the GPU forecast-lab experiment, and to draft explanatory text (README, Discovery Card text, slide and video copy).
-Every number is computed by the code from NASA data (GLDAS-2.1, GLDAS-2.0, FLDAS, GRACE/GRACE-FO). The project
-idea and its framing came from the team.
+Every number is computed by the code from NASA data (GLDAS-2.1, GLDAS-2.0, FLDAS, GRACE/GRACE-FO).
 
 ## Reproduce
 
