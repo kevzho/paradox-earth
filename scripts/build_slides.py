@@ -50,15 +50,19 @@ SOIL_CSV = next((p for p in (ROOT / "outputs_global_v2" / "regional_soil_water_0
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 # ---- design tokens (shared by CSS and matplotlib) --------------------------
-INK = "#0A1322"        # background: deep survey-chart navy
-PANEL = "#111D31"      # raised panel
-RULE = "#22314A"       # hairlines
-TEXT = "#E8EEF6"       # primary text
-MUTED = "#8C9AB0"      # secondary text
-WET = "#4FA3F7"        # significant wetting (blue)
-DRY = "#F2873A"        # significant drying (orange)
-LAND = "#26334A"       # land, not significant
+INK = "#131416"        # background: neutral grey, same as the explorer
+PANEL = "#1b1c1f"      # raised block
+RULE = "#3b3e43"       # hairlines
+EDGE = "#7d8189"       # block borders
+TEXT = "#ededed"       # primary text
+MUTED = "#a3a6ab"      # secondary text
+WET = "#5aa2d8"        # significant wetting (blue)
+DRY = "#de9b4a"        # significant drying (amber)
+LAND = "#3e4045"       # land, no clear change
 OCEAN = INK
+
+# numbered markers on the case-file screenshot (percent of the image: map region, case title, checks)
+PIN1, PIN2, PIN3 = (30, 46), (66, 9), (66, 56)
 
 PASS, PARTIAL, FAIL, NOT_RUN = "pass", "partial", "fail", "not_run"
 
@@ -523,6 +527,29 @@ def grade_line(rob):
         f" · {len(graded) - len(run)} not yet run" if len(run) < len(graded) else "")
 
 
+PLAIN_CHECK = (("window", "Holds over shorter periods too"),
+               ("neighbour", "Neighbouring squares agree"),
+               ("independent precipitation", "A second rainfall record (CHIRPS) agrees"),
+               ("literature", "Published studies report it too"))
+
+
+def plain_checks(rob, lit=None) -> str:
+    """The extra checks in plain words (the selection criterion is not a check, so it is left out)."""
+    out = []
+    for r in rob or []:
+        if r.get("role") == "selection":
+            continue
+        name = str(r.get("check", ""))
+        label = next((v for k, v in PLAIN_CHECK if k in name.lower()), name)
+        st = r.get("status")
+        mark = {"pass": "✓", "partial": "½", "fail": "✗"}.get(st, "–")
+        word = {"pass": "", "partial": " (partly)", "fail": " (no)"}.get(st, " (not run)")
+        if "literature" in name.lower() and lit:
+            label += " (" + ", ".join(short_cite(l.get("citation", "")) for l in lit[:2]) + ")"
+        out.append(f'<li class="{esc(st)}"><span class="m">{mark}</span><span>{esc(label)}{esc(word)}</span></li>')
+    return "".join(out)
+
+
 def build_html(ctx):
     m, team = ctx["meta"], ctx["team"]
     ds = m.get("dataset", {})
@@ -672,184 +699,133 @@ def build_html(ctx):
                         f"on a region held out of training; a water-budget penalty (λ = 1) cuts its budget residual "
                         f"from {fmt_num(r0, 1)} to {fmt_num(r1, 1)} mm/month. Emulation skill against a model, not a forecast of reality.")
 
+    site = str(team.get("site_url") or "https://paradoxearth.xyz").rstrip("/")
+    site_short = re.sub(r"^https?://", "", site).split("/")[0]
+    area_up, area_dn = reg.get("area_up_km2"), reg.get("area_down_km2")
+    area_tot = (area_up or 0) + (area_dn or 0)
+    n_tiles = get(reg, "n_tiles_tested", default=0) or get(m, "n_tiles", default=0)
+    overview = (f'<img class="shot" src="{ctx["overview_uri"]}" alt="Paradox Earth explorer: map of wetting and drying land">'
+                if ctx.get("overview_uri") else explorer)
+    wet_names = " · ".join(esc(x) for x in ctx.get("wet_names", []))
+    dry_names = " · ".join(esc(x) for x in ctx.get("dry_names", []))
+    sw_step = ac.get("swdown_step_21_W_m2")
+    sw_step20 = ac.get("swdown_step_20_W_m2")
+    gr_hot = (gr.get("hotspot") or {}) if isinstance(gr.get("hotspot"), dict) else {}
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>Paradox Earth Deck</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=block" rel="stylesheet">
 <style>
 :root {{
-  --ink:{INK}; --panel:{PANEL}; --rule:{RULE}; --text:{TEXT}; --muted:{MUTED};
-  --wet:{WET}; --dry:{DRY}; --land:{LAND};
-  --display:'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
-  --body:'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
-  --mono:'IBM Plex Mono', Menlo, monospace;
+  --ink:{INK}; --panel:{PANEL}; --rule:{RULE}; --edge:{EDGE}; --text:{TEXT}; --muted:{MUTED};
+  --wet:{WET}; --dry:{DRY}; --land:{LAND}; --hl:#ffd479; --fail:#f08a8a;
+  --display:'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
+  --body:'Public Sans', 'Helvetica Neue', Arial, sans-serif;
 }}
 @page {{ size: 1280px 720px; margin: 0; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ background: var(--ink); color: var(--text); font-family: var(--body);
   -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
 .slide {{ width: 1280px; height: 720px; position: relative; overflow: hidden;
-  padding: 56px 72px 48px; background: var(--ink); page-break-after: always;
+  padding: 48px 64px 52px; background: var(--ink); page-break-after: always;
   break-after: page; display: flex; flex-direction: column; }}
 .slide:last-child {{ page-break-after: auto; break-after: auto; }}
-.eyebrow {{ font-family: var(--mono); font-size: 14px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }}
-h1 {{ font-family: var(--display); font-weight: 800; font-size: 148px;
-  line-height: .9; letter-spacing: -.035em; }}
-h2 {{ font-family: var(--display); font-weight: 700; font-size: 50px;
-  line-height: 1.02; letter-spacing: -.025em; max-width: 1050px; }}
-p, li {{ font-size: 20px; line-height: 1.42; }}
+.tag {{ display: inline-block; align-self: flex-start; background: var(--text); color: var(--ink);
+  font: 700 15px/1 var(--body); letter-spacing: .04em; text-transform: uppercase; padding: 7px 10px; margin-bottom: 16px; }}
+h1 {{ font-family: var(--display); font-weight: 800; font-size: 150px; line-height: .86; text-transform: uppercase; }}
+h2 {{ font-family: var(--display); font-weight: 800; font-size: 54px; line-height: .98;
+  text-transform: uppercase; max-width: 1150px; }}
+p, li {{ font-size: 22px; line-height: 1.4; }}
 .muted {{ color: var(--muted); }}
 .wet {{ color: var(--wet); }} .dry {{ color: var(--dry); }}
-.mono {{ font-family: var(--mono); }}
-.foot {{ position: absolute; left: 72px; right: 72px; bottom: 22px; display: flex;
-  justify-content: space-between; font-family: var(--mono); font-size: 11.5px;
-  color: var(--muted); letter-spacing: .04em; }}
-.foot span:first-child {{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 24px; }}
-.foot span:last-child {{ white-space: nowrap; flex: none; }}
+b {{ font-weight: 700; }}
+.box {{ background: var(--panel); border: 2px solid var(--edge); box-shadow: 6px 6px 0 #000; }}
+.foot {{ position: absolute; left: 64px; right: 64px; bottom: 18px; display: flex; gap: 24px;
+  justify-content: space-between; font-size: 13px; color: var(--muted); }}
+.foot span:last-child {{ white-space: nowrap; flex: none; font-weight: 700; }}
 .fig {{ width: 100%; display: block; }}
+.url {{ font-family: var(--display); font-weight: 800; color: var(--ink); background: var(--hl);
+  text-decoration: none; display: inline-block; padding: 4px 14px; text-transform: lowercase; }}
+.shot {{ width: 100%; display: block; border: 2px solid var(--edge); box-shadow: 6px 6px 0 #000; }}
+.shot.pending {{ aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--panel); }}
 
 /* 1 title */
 .s-title {{ justify-content: space-between; }}
-.s-title .split {{ display: flex; height: 10px; width: 100%; margin: 26px 0 30px; }}
-.s-title .split i {{ display: block; height: 100%; }}
-.s-title .tagline {{ font-family: var(--display); font-size: 34px; font-weight: 400;
-  max-width: 900px; line-height: 1.15; color: var(--text); }}
-.s-title .tagline em {{ font-style: normal; color: var(--muted); }}
-.credits {{ display: grid; grid-template-columns: 1.2fr 1fr 1.4fr; gap: 32px;
-  border-top: 1px solid var(--rule); padding-top: 20px; }}
-.credits dt {{ font-family: var(--mono); font-size: 12px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }}
-.credits dd {{ font-size: 19px; line-height: 1.35; }}
+.s-title .bar {{ display: flex; height: 16px; width: 100%; margin: 24px 0 22px; border: 2px solid var(--edge); }}
+.s-title .bar i {{ display: block; height: 100%; }}
+.s-title .tagline {{ font-size: 30px; line-height: 1.25; max-width: 1050px; }}
+.s-title .tagline b {{ color: var(--hl); }}
+.s-title .try {{ margin-top: 20px; font-size: 22px; display: flex; align-items: center; gap: 16px; }}
+.s-title .try .url {{ font-size: 40px; }}
+.credits {{ display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 28px; border-top: 2px solid var(--edge); padding-top: 16px; }}
+.credits dt {{ font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }}
+.credits dd {{ font-size: 20px; line-height: 1.3; }}
 
 /* 2 paradox */
-.bignum {{ display: flex; align-items: flex-end; gap: 40px; margin: 22px 0 6px; }}
-.bignum .n {{ font-family: var(--display); font-weight: 800; font-size: 120px;
-  letter-spacing: -.04em; line-height: .9; }}
-.bignum .n small {{ font-size: 40px; font-weight: 600; letter-spacing: -.01em; }}
-.bignum .lbl {{ font-size: 19px; color: var(--muted); max-width: 520px; padding-bottom: 10px; }}
-.bignum .lbl b {{ color: var(--text); font-weight: 600; }}
+.s-paradox .row {{ display: grid; grid-template-columns: 1fr 380px; gap: 36px; margin-top: 22px; align-items: start; }}
+.s-paradox .say p {{ font-size: 22px; margin-bottom: 14px; }}
+.s-paradox .say p.big {{ font: 800 64px/0.95 var(--display); margin-bottom: 8px; }}
+.legend {{ display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 16px; color: var(--muted); margin-top: 8px; }}
+.legend span::before {{ content: ''; display: inline-block; width: 14px; height: 14px;
+  margin-right: 8px; vertical-align: -2px; background: var(--c); }}
 
 /* 3 split */
-.s-split .row {{ display: flex; gap: 28px; align-items: flex-start; margin-top: 10px; }}
-.s-split .mapbox {{ flex: 1 1 auto; min-width: 0; }}
-.s-split .side {{ width: 300px; flex: none; }}
-.share {{ margin-bottom: 18px; }}
-.share .v {{ font-family: var(--display); font-weight: 800; font-size: 64px;
-  line-height: .95; letter-spacing: -.03em; }}
-.share .k {{ font-size: 15px; color: var(--muted); }}
-table.win {{ border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 12.5px; }}
-table.win th {{ text-align: left; color: var(--muted); font-weight: 400; padding: 3px 4px;
-  border-bottom: 1px solid var(--rule); }}
-table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
-.legend {{ display: flex; flex-wrap: wrap; row-gap: 4px; gap: 22px; font-size: 14px; color: var(--muted); margin-top: 6px; }}
-.legend span::before {{ content: ''; display: inline-block; width: 12px; height: 12px;
-  margin-right: 7px; vertical-align: -1px; background: var(--c); }}
+.s-split .row {{ display: grid; grid-template-columns: 1fr 330px; gap: 30px; margin-top: 16px; }}
+.s-split .num {{ padding: 12px 16px; margin-bottom: 14px; }}
+.s-split .num .v {{ font: 800 44px/1 var(--display); white-space: nowrap; }}
+.s-split .num .k {{ font-size: 17px; line-height: 1.3; margin-top: 4px; }}
+.s-split .num .where {{ font-size: 15px; color: var(--muted); margin-top: 6px; line-height: 1.3; }}
+.s-split .num.w {{ border-top: 10px solid var(--wet); }} .s-split .num.d {{ border-top: 10px solid var(--dry); }}
 
-/* 4 pipeline */
-.flow {{ display: flex; align-items: stretch; gap: 0; margin-top: 40px; }}
-.step {{ flex: 1; background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 10px; padding: 20px 18px; position: relative; }}
-.step + .arrow {{ }}
-.arrow {{ width: 34px; flex: none; display: flex; align-items: center; justify-content: center;
-  color: var(--muted); font-size: 24px; }}
-.step .k {{ font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }}
-.step .t {{ font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1;
-  margin-bottom: 10px; }}
-.step p {{ font-size: 15px; line-height: 1.4; color: var(--muted); }}
-.step.nasa {{ border-color: var(--wet); }}
-.step.out {{ border-color: var(--dry); }}
-.nasa-note {{ margin-top: 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }}
-.nasa-note p {{ font-size: 18px; }}
+/* 4 how */
+.steps {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 22px; }}
+.steps .box {{ padding: 18px 20px; }}
+.steps .n {{ font: 800 56px/0.9 var(--display); color: var(--hl); }}
+.steps .t {{ font: 800 27px/1.05 var(--display); text-transform: uppercase; margin: 8px 0 8px; }}
+.steps p {{ font-size: 17.5px; line-height: 1.38; }}
+.data {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }}
+.data .box {{ padding: 12px 14px; box-shadow: none; border-color: var(--rule); }}
+.data .t {{ font: 800 21px/1.05 var(--display); text-transform: uppercase; }}
+.data p {{ font-size: 14.5px; line-height: 1.35; color: var(--muted); margin-top: 4px; }}
+.data-h {{ font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-top: 22px; }}
 
-.srcs {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }}
-.src {{ background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }}
-.src.nasa {{ border-color: var(--wet); }}
-.src.obs {{ border-color: var(--dry); }}
-.src .k {{ font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }}
-.src .t {{ font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; margin: 6px 0 4px; }}
-.src .id {{ font-family: var(--mono); font-size: 11px; color: var(--wet); line-height: 1.35; margin-bottom: 8px; word-break: break-word; }}
-.src p {{ font-size: 13.5px; line-height: 1.38; color: var(--muted); }}
-.s-how .flow {{ margin-top: 18px; }}
-.s-how .step {{ padding: 12px 14px; }}
-.s-how .step .k {{ margin-bottom: 4px; }}
-.s-how .step .t {{ font-size: 18px; margin-bottom: 4px; }}
-.s-how .step p {{ font-size: 12.5px; line-height: 1.35; }}
-.s-how h2 {{ font-size: 44px; }}
+/* 5 report card (demo) */
+.s-card .row {{ display: grid; grid-template-columns: 1.25fr 1fr; gap: 30px; margin-top: 14px; flex: 1; min-height: 0; }}
+.demo {{ position: relative; align-self: start; }}
+.pin {{ position: absolute; width: 44px; height: 44px; background: var(--hl); color: #111;
+  font: 800 28px/44px var(--display); text-align: center; border: 2px solid #111; box-shadow: 4px 4px 0 #000; }}
+.steps-mini {{ list-style: none; margin-top: 12px; display: grid; gap: 6px; }}
+.steps-mini li {{ font-size: 17px; display: flex; gap: 10px; align-items: baseline; }}
+.steps-mini li i {{ font: 800 18px/26px var(--display); font-style: normal; background: var(--hl); color: #111; width: 26px; text-align: center; flex: none; }}
+.rc {{ padding: 16px 20px; border-top: 10px solid var(--wet); }}
+.rc .place {{ font: 800 34px/1 var(--display); text-transform: uppercase; }}
+.rc .big {{ font: 800 48px/1 var(--display); margin: 6px 0 2px; }}
+.rc .sub {{ font-size: 15px; color: var(--muted); }}
+.checks {{ list-style: none; margin: 10px 0 0; border-top: 2px solid var(--rule); }}
+.checks li {{ display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 7px 0; border-bottom: 2px solid var(--rule); font-size: 17px; line-height: 1.3; }}
+.checks .m {{ font: 800 22px/1.1 var(--display); text-align: center; }}
+.checks .pass .m {{ color: #7fd1ae; }} .checks .partial .m {{ color: #e8c46a; }} .checks .fail .m {{ color: var(--fail); }}
+.who {{ margin-top: 10px; border-left: 6px solid var(--dry); padding: 2px 0 2px 12px; font-size: 16px; line-height: 1.35; }}
+.who b {{ display: block; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }}
 
-/* 5 + 6 case file */
-.case {{ display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; margin-top: 18px; flex: 1; min-height: 0; }}
-.file {{ background: var(--panel); border: 1px solid var(--rule); border-radius: 12px;
-  padding: 22px 26px; position: relative; }}
-.file .tag {{ font-family: var(--mono); font-size: 12px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--muted); }}
-.file .place {{ font-family: var(--display); font-weight: 700; font-size: 29px;
-  letter-spacing: -.02em; margin: 6px 0 8px; line-height: 1.05; }}
-.file .hl {{ font-size: 16px; line-height: 1.4; }}
-.stats {{ display: flex; gap: 28px; margin: 14px 0 4px; border-top: 1px solid var(--rule); padding-top: 12px; }}
-.stats div b {{ display: block; font-family: var(--display); font-weight: 800; font-size: 32px; letter-spacing: -.02em; }}
-.stats div span {{ font-size: 13px; color: var(--muted); }}
-.checklist {{ list-style: none; }}
-.chk {{ display: grid; grid-template-columns: 34px 1fr; column-gap: 12px; padding: 11px 0;
-  border-bottom: 1px solid var(--rule); align-items: baseline; }}
-.chk .mark {{ grid-row: span 2; font-size: 24px; font-weight: 700; text-align: center; }}
-.chk-name {{ font-size: 18px; font-weight: 600; }}
-.chk-detail {{ font-size: 14px; color: var(--muted); line-height: 1.35; }}
-.chk.pass .mark {{ color: var(--wet); }}
-.chk.partial .mark {{ color: #D9C36A; }}
-.chk.fail .mark {{ color: var(--dry); }}
-.chk.notrun .mark {{ color: var(--muted); }}
-.grade {{ font-family: var(--mono); font-size: 13px; color: var(--muted); margin: 12px 0 0; letter-spacing: .04em; }}
-.who {{ margin-top: 12px; border-left: 3px solid var(--dry); padding: 2px 0 2px 16px; }}
-.who .q {{ font-size: 13px; font-family: var(--mono); color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }}
-.who p {{ font-size: 15.5px; line-height: 1.35; }}
-.who p b {{ font-weight: 600; }}
-.lits {{ list-style: none; margin-top: 10px; }}
-.lits li {{ font-size: 13px; color: var(--muted); line-height: 1.35; }}
-.lit-agree {{ font-family: var(--mono); color: var(--text); }}
-.stamp {{ position: absolute; bottom: 22px; right: 24px; font-family: var(--mono); font-weight: 500;
-  font-size: 15px; letter-spacing: .2em; color: var(--dry); border: 2px solid var(--dry);
-  padding: 6px 12px; transform: rotate(-4deg); border-radius: 4px; }}
-.s-card h2 {{ font-size: 44px; }}
-.s-card .case {{ margin-top: 12px; }}
-.s-card .chk {{ padding: 7px 0; }}
-.s-card .chk .mark {{ font-size: 20px; }}
-.s-card .chk-name {{ font-size: 16px; line-height: 1.25; }}
-.s-card .chk-detail {{ font-size: 13px; line-height: 1.3; }}
-.s-card .file {{ padding: 18px 22px; }}
-.s-retract .lede {{ font-size: 18px; line-height: 1.4; max-width: 1100px; margin-top: 12px; }}
-.s-retract h2 {{ font-size: 44px; }}
-.s-retract .case {{ margin-top: 14px !important; }}
-.s-retract .legend {{ margin-top: 4px; }}
-.s-retract .file {{ padding: 18px 22px 54px; }}
-.s-retract .file .hl {{ font-size: 15px; }}
-.s-retract .who p {{ font-size: 14.5px; }}
-.s-retract .stamp {{ bottom: 14px; }}
-.s-retract .fl-line b {{ font-weight: 600; color: var(--wet); }}
+/* 6 retraction */
+.s-retract .row {{ display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; margin-top: 16px; }}
+.s-retract .story p {{ font-size: 19px; line-height: 1.4; margin-bottom: 10px; }}
+.s-retract .story p b {{ color: var(--hl); }}
+.stamp {{ display: inline-block; background: var(--fail); color: #111; font: 800 26px/1 var(--display);
+  letter-spacing: .06em; padding: 8px 14px; margin-bottom: 14px; box-shadow: 4px 4px 0 #000; }}
+.s-retract .fig {{ border: 2px solid var(--edge); box-shadow: 6px 6px 0 #000; }}
 
-/* 7 explorer */
-.s-explore .row {{ display: grid; grid-template-columns: 1.35fr 1fr; gap: 40px; margin-top: 24px; }}
-.shot {{ width: 100%; border-radius: 10px; border: 1px solid var(--rule); display: block; }}
-.shot.pending {{ aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); color: var(--muted); font-size: 16px; letter-spacing: .1em;
-  background: repeating-linear-gradient(135deg, var(--panel) 0 14px, var(--ink) 14px 28px); }}
-.next li {{ font-size: 16px; line-height: 1.36; margin: 0 0 8px 20px; }}
-.next li.lab {{ font-size: 14.5px; color: var(--muted); }}
-.next li.lab b {{ color: var(--wet); font-weight: 600; }}
-.s-explore h2 {{ font-size: 40px; max-width: none; }}
-.s-explore .row {{ grid-template-columns: 1.15fr 1fr; }}
-.s-explore .refs li {{ font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.s-explore .row {{ margin-top: 16px !important; }}
-.s-explore .links {{ margin-top: 10px; }}
-.s-explore .refs {{ margin-top: 10px; }}
-.links {{ margin-top: 22px; font-family: var(--mono); font-size: 13px; line-height: 1.8; white-space: nowrap; }}
-.links a {{ color: var(--wet); text-decoration: none; }}
-.refs {{ margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 10px; }}
-.refs .q {{ font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }}
+/* 7 try it */
+.s-explore .row {{ display: grid; grid-template-columns: 1.2fr 1fr; gap: 34px; margin-top: 16px; }}
+.s-explore .go {{ font-size: 20px; margin-bottom: 12px; }}
+.s-explore .go .url {{ font-size: 46px; margin-top: 6px; }}
+.s-explore ul.more {{ list-style: none; display: grid; gap: 10px; margin-top: 8px; }}
+.s-explore ul.more li {{ font-size: 17px; line-height: 1.35; padding-left: 14px; border-left: 4px solid var(--edge); }}
+.refs {{ margin-top: 12px; border-top: 2px solid var(--rule); padding-top: 8px; }}
 .refs li {{ font-size: 11.5px; line-height: 1.38; color: var(--muted); list-style: none; }}
 
 @media screen {{ body {{ display: flex; flex-direction: column; align-items: center; gap: 0; }} }}
@@ -860,137 +836,134 @@ table.win td {{ padding: 4px 4px; border-bottom: 1px solid var(--rule); }}
 <!-- 1 TITLE -->
 <section class="slide s-title">
   <div>
-    <div class="eyebrow">{esc(team.get("event", "NASA International Space Apps Challenge"))} · {esc(team.get("challenge", m.get("challenge")))}</div>
+    <div class="tag">{esc(team.get("event", "NASA International Space Apps Challenge"))} · {esc(team.get("challenge", m.get("challenge")))}</div>
     <h1>{esc(m.get("project", "Paradox Earth"))}</h1>
-    <div class="split"><i style="flex:{reg.get('share_area_down') or 1};background:var(--dry)"></i><i style="flex:{max(0.0, 1 - (reg.get('share_area_up') or 0) - (reg.get('share_area_down') or 0))};background:var(--land)"></i><i style="flex:{reg.get('share_area_up') or 1};background:var(--wet)"></i></div>
-    <p class="tagline">{esc(m.get("tagline"))} <em>An automated trend detective that grades its own evidence.</em></p>
+    <div class="bar"><i style="flex:{reg.get('share_area_down') or 1};background:var(--dry)"></i><i style="flex:{max(0.0, 1 - (reg.get('share_area_up') or 0) - (reg.get('share_area_down') or 0))};background:var(--land)"></i><i style="flex:{reg.get('share_area_up') or 1};background:var(--wet)"></i></div>
+    <p class="tagline">Averaged over all the world’s land, rainfall has barely changed in {n_years} years. Look region by region and <b>an area about the size of the United States</b> is getting wetter or drier. Paradox Earth finds those places and shows how sure we can be.</p>
+    <div class="try">Try it live: <a class="url" href="{esc(site)}">{esc(site_short)}</a></div>
   </div>
   <dl class="credits">
     <div><dt>Team</dt><dd>{esc(team.get("team_name"))}</dd></div>
     <div><dt>Members</dt><dd>{"<br>".join(esc(x) for x in members)}</dd></div>
     <div><dt>Challenge</dt><dd>{esc(team.get("challenge"))}<br><span class="muted">{esc(team.get("local_event"))}</span></dd></div>
   </dl>
-  <div class="foot"><span>Data: NASA GLDAS-2.1 ({esc(ds.get("short_name"))}), DOI {esc(ds.get("doi"))}</span><span>bar above: share of land drying · not significant · wetting</span></div>
+  <div class="foot"><span>Bar: share of land getting drier (amber) · no clear change (grey) · getting wetter (blue), {y0}–{y1}. Data: NASA GLDAS-2.1, doi:{esc(ds.get("doi"))}</span><span>1 / 7</span></div>
 </section>
 
 <!-- 2 PARADOX -->
 <section class="slide s-paradox">
-  <div class="eyebrow">The paradox</div>
-  <h2>Average all the world’s land together and precipitation barely moves.</h2>
-  <div class="bignum">
-    <div class="n">{fmt_num(agg.get("slope_pct_per_decade"), 1, True)}<small>% per decade</small></div>
-    <div class="lbl">Land-average trend {y0}–{y1}: <b>{fmt_num(agg.get("slope"), 2, True)} mm/month per decade</b>,
-      95% CI <b>[{fmt_num(ci[0], 2)}, {fmt_num(ci[1], 2)}]</b>, p = {fmt_p(agg.get("p_value"))}. The interval includes zero: no detectable global trend.</div>
+  <div class="tag">The puzzle</div>
+  <h2>Add up all the world’s land and rainfall looks flat</h2>
+  <div class="row">
+    <div><img class="fig" src="{ctx["line_uri"]}" alt="Global land-average rainfall, 2000 to 2025: a flat line">
+      <div class="legend"><span style="--c:{TEXT}">12-month average</span><span style="--c:{MUTED}">each month</span><span style="--c:{DRY}">best-fit trend</span></div></div>
+    <div class="say">
+      <p class="big">{fmt_num(agg.get("slope_pct_per_decade"), 1, True)}% <span style="font-size:30px">per decade</span></p>
+      <p>The land-wide change in rainfall since {y0} is too small to tell apart from zero (p&nbsp;=&nbsp;{fmt_p(agg.get("p_value"))}).</p>
+      <p class="muted">But an average can hide a lot: more rain in one place and less in another cancel out. Water decisions are made region by region, so we looked region by region.</p>
+    </div>
   </div>
-  <img class="fig" src="{ctx["line_uri"]}" alt="Flat global land-average precipitation anomaly">
-  <div class="legend" style="margin-top:2px"><span style="--c:{TEXT}">12-month mean anomaly</span><span style="--c:{MUTED}">monthly anomaly</span><span style="--c:{DRY}">fitted trend</span></div>
-  <div class="foot"><span>{esc(ds.get("variable_label"))} · land-area weighted · OLS slope, autocorrelation-robust (AR(1)) test</span><span>2 / 7</span></div>
+  <div class="foot"><span>Rain and snow on land, NASA GLDAS-2.1, {y0}–{y1}, change from the normal for each month, weighted by land area.</span><span>2 / 7</span></div>
 </section>
 
 <!-- 3 SPLIT -->
 <section class="slide s-split">
-  <div class="eyebrow">The split</div>
-  <h2>Underneath the flat line, a few regions show detectable drying or wetting.</h2>
+  <div class="tag">What the average hides</div>
+  <h2>Underneath: {fmt_area(area_tot)} is getting wetter or drier</h2>
   <div class="row">
-    <div class="mapbox">
-      <img class="fig" src="{ctx["map_uri"]}" alt="Map of tiles with significant wetting and drying trends">
-      <div class="legend"><span style="--c:{WET}">significant wetting</span><span style="--c:{DRY}">significant drying</span><span style="--c:{LAND}">no detectable trend</span><span>BH-FDR q &lt; {get(reg, "alpha_fdr", default=0.05)}</span></div>
+    <div>
+      <img class="fig" src="{ctx["map_uri"]}" alt="World map: places with a clear wetting or drying trend">
+      <div class="legend"><span style="--c:{WET}">getting wetter</span><span style="--c:{DRY}">getting drier</span><span style="--c:{LAND}">no clear change</span></div>
     </div>
-    <div class="side">
-      <div class="share"><div class="v wet">{fmt_pct(reg.get("share_area_up"))}</div><div class="k">of tested land area shows a detectable wetting trend (2000-2025)</div></div>
-      <div class="share"><div class="v dry">{fmt_pct(reg.get("share_area_down"))}</div><div class="k">of tested land area shows a detectable drying trend (2000-2025)</div></div>
-      <table class="win"><tr><th>window</th><th>wet</th><th>dry</th><th>global</th><th>p</th></tr>{win_html}</table>
-      <p class="muted" style="font-size:12.5px;margin-top:8px;line-height:1.35">Shares after false-discovery correction across {get(reg, "n_tiles_tested", default=0):,} 1° tiles. Global slope in mm/month per decade.</p>
+    <div>
+      <div class="num box w"><div class="v wet">{fmt_area(area_up)}</div><div class="k">getting <b>wetter</b> ({fmt_pct(reg.get("share_area_up"))} of land)</div><div class="where">{wet_names}</div></div>
+      <div class="num box d"><div class="v dry">{fmt_area(area_dn)}</div><div class="k">getting <b>drier</b> ({fmt_pct(reg.get("share_area_down"))} of land)</div><div class="where">{dry_names}</div></div>
+      <p class="muted" style="font-size:15px;line-height:1.35">Together, about the size of the United States. Shorter periods show smaller areas; we report those too.</p>
     </div>
   </div>
-  <div class="foot"><span>Statistical trends, not causes. {esc(caveat0)}</span><span>3 / 7</span></div>
+  <div class="foot"><span>Only places that pass every statistical safeguard are coloured. These are trends, not causes.</span><span>3 / 7</span></div>
 </section>
 
 <!-- 4 HOW -->
 <section class="slide s-how">
-  <div class="eyebrow">How NASA data makes it possible</div>
-  <h2>Four NASA products: one to find trends, three to try to break them.</h2>
-  <div class="srcs">{src_html}</div>
-  <div class="flow">
-    <div class="step"><div class="k">Ingest</div><div class="t">Streaming pipeline</div><p>Reads one month at a time and aggregates to {get(m, "n_tiles", default=0):,} land tiles of {get(m, "tile_deg", default=1):g}°. Quality checks {"passed" if m.get("qc_passed") else "pending"}.</p></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="k">Test</div><div class="t">Calibrated trend tests</div><p>OLS trend; p is the larger of an AR(1)-corrected and an annual-means test (calibrated to 3–6% false positives), then Benjamini–Hochberg FDR.</p></div>
-    <div class="arrow">→</div>
-    <div class="step"><div class="k">Map</div><div class="t">Spatial clusters</div><p>Local Moran’s I with permutation tests finds coherent drying and wetting regions, not lone pixels.</p></div>
-    <div class="arrow">→</div>
-    <div class="step out"><div class="k">Explain</div><div class="t">Discovery Cards</div><p>{n_cards} cards, each graded against the cross-checks above, with a named user, a decision and caveats.</p></div>
+  <div class="tag">How it works</div>
+  <h2>Three steps, each built so it is hard to fool</h2>
+  <div class="steps">
+    <div class="box"><div class="n">1</div><div class="t">Split the land</div><p>We divide all land into {n_tiles:,} squares, each about 100&nbsp;km across, and take {n_years} years of monthly rainfall for each one from NASA.</p></div>
+    <div class="box"><div class="n">2</div><div class="t">Test each square</div><p>Wet and dry spells can fake a trend. On made-up records with no trend, the usual test raised false alarms 29–34% of the time. Ours raised them 3–6% of the time.</p></div>
+    <div class="box"><div class="n">3</div><div class="t">Keep only real patterns</div><p>Test {n_tiles:,} squares and some will look unusual by luck alone. We correct for that, then keep a trend only where neighbouring squares agree.</p></div>
   </div>
-  <p class="muted" style="font-size:14.5px;margin-top:14px;line-height:1.4">A gap-free, globally consistent NASA record lets a trend in Chile and one in Siberia be measured the same way; independent NASA products let each trend be challenged. Results are “detectable trends”, never causes.</p>
-  <div class="foot"><span>Data: NASA GES DISC (GLDAS, FLDAS) · NASA JPL (GRACE/GRACE-FO mascons) · {esc(ds.get("variable"))}</span><span>4 / 7</span></div>
+  <div class="data-h">NASA data behind it</div>
+  <div class="data">
+    <div class="box"><div class="t">GLDAS-2.1</div><p>NASA’s global land model: monthly rainfall, 2000–2025. Where the trends are found.</p></div>
+    <div class="box"><div class="t">FLDAS + CHIRPS</div><p>A second NASA land model fed by a different rainfall record, used to double-check every region.</p></div>
+    <div class="box"><div class="t">GLDAS-2.0</div><p>The same model with older inputs. It showed that one of our results came from a data change (slide 6).</p></div>
+    <div class="box"><div class="t">GRACE</div><p>Satellites that weigh water by measuring gravity, catching water loss the model cannot see, such as groundwater.</p></div>
+  </div>
+  <div class="foot"><span>Methods in brief: seasonal trend fit with a persistence-aware test, false-discovery correction (Benjamini–Hochberg), local Moran’s I clusters. Full details in the explorer.</span><span>4 / 7</span></div>
 </section>
 
-<!-- 5 CARD -->
+<!-- 5 REPORT CARD (DEMO) -->
 <section class="slide s-card">
-  <div class="eyebrow">A Discovery Card</div>
-  <h2>Every finding arrives with its own evidence grade, and a person who needs it.</h2>
-  <div class="case">
-    <div class="file">
-      <div class="tag">{esc(card.get("kind", ""))} · {esc(card.get("evidence_level", ""))}</div>
-      <div class="place">{esc(card.get("place") or card.get("title"))}</div>
-      <p class="hl">{esc(card_summary)}</p>
-      <div class="stats">
-        <div><b class="{'dry' if card.get('kind') == 'drying' else 'wet'}">{fmt_num(num.get("median_pct_per_decade"), 1, True)}%</b><span>median per decade</span></div>
-        <div><b>{num.get("n_tiles") if num.get("n_tiles") is not None else "n/a"}</b><span>1° tiles</span></div>
-        <div><b>{fmt_pct(num.get("share_tiles_fdr_significant"), 0)}</b><span>tiles FDR-significant</span></div>
-      </div>
-      <div class="who"><div class="q">Who decides with this</div>
-        <p><b>{esc(user.get("who"))}</b>. <span class="muted">Decision: {esc(user.get("decision"))}.</span></p></div>
+  <div class="tag">Live demo · {esc(site_short)}</div>
+  <h2>Every region comes with a report card</h2>
+  <div class="row">
+    <div class="demo">
+      <div style="position:relative">{explorer}
+      <div class="pin" style="left:{PIN1[0]}%;top:{PIN1[1]}%">1</div>
+      <div class="pin" style="left:{PIN2[0]}%;top:{PIN2[1]}%">2</div>
+      <div class="pin" style="left:{PIN3[0]}%;top:{PIN3[1]}%">3</div></div>
+      <ol class="steps-mini">
+        <li><i>1</i>Click a highlighted region on the map.</li>
+        <li><i>2</i>Read what changed there, in plain numbers.</li>
+        <li><i>3</i>See which checks it passed, and which it did not.</li>
+      </ol>
     </div>
-    <div>
-      <div class="tag eyebrow" style="margin-bottom:4px">Robustness checklist</div>
-      {checklist_html(card.get("robustness"), card.get("literature"))}
-      <div class="grade">{esc(grade_line(card.get("robustness")))}</div>
+    <div class="rc box">
+      <div class="place">{esc(card.get("title") or card.get("place"))}</div>
+      <div class="big {'dry' if card.get('kind') == 'drying' else 'wet'}">Rain {'down' if (num.get("median_pct_per_decade") or 0) < 0 else 'up'} {fmt_num(abs(num.get("median_pct_per_decade") or 0), 0)}% per decade</div>
+      <div class="sub">{num.get("n_tiles")} squares, {fmt_area(num.get("area_km2"))}, {y0}–{y1}</div>
+      <ul class="checks">{plain_checks(card.get("robustness"), card.get("literature"))}</ul>
+      <div class="who"><b>Who could use this</b>{esc(user.get("who"))}: {esc(str(user.get("decision", "")).rstrip("."))}.</div>
     </div>
   </div>
-  <div class="foot"><span>Card {esc(card.get("id"))} · region {esc(card.get("region_id"))} · one of {n_cards} cards in the explorer</span><span>5 / 7</span></div>
+  <div class="foot"><span>Screenshot of the live explorer. Weaker regions are shown too, with their lower grades.</span><span>5 / 7</span></div>
 </section>
 
 <!-- 6 RETRACTION -->
 <section class="slide s-retract">
-  <div class="eyebrow">The detective that checks itself</div>
-  <h2>Paradox Earth caught a false trend: it lines up with changes in the model’s input data.</h2>
-  <p class="lede muted">{esc(ac_reading)}</p>
-  <div class="case" style="grid-template-columns:1.45fr 1fr;margin-top:14px">
+  <div class="tag">It caught its own mistake</div>
+  <h2>Our first headline was wrong, and our own checks caught it</h2>
+  <div class="row">
     <div>{ac_fig}</div>
-    <div class="file">
-      <div class="stamp">RETRACTED</div>
-      <div class="tag">Soil water 0–200 cm · original headline</div>
-      <p class="hl" style="margin-top:10px">A forcing change is not a trend. Our original {n_years}-year soil-water decline was withdrawn instead of published.</p>
-      <p class="hl fl-line" style="margin-top:10px"><b>{esc(fl_line)}</b></p>
-      <div class="who"><div class="q">Who this protects</div>
-        <p><b>{esc(retr_user.get("who"))}</b>: {esc(retr_user.get("decision"))}. <span class="muted">{esc(retr_user.get("why_it_matters"))}</span></p></div>
+    <div class="story">
+      <div class="stamp">WITHDRAWN</div>
+      <p>Our first finding was that <b>soil water was falling worldwide</b>.</p>
+      <p>Our checks found most of the fall came from a sudden drop in 2010, exactly when NASA changed the sunlight data that feeds the model: sunlight jumped by {fmt_num(sw_step, 1)} W/m².</p>
+      <p>The same model run with the older data shows no such jump ({fmt_num(sw_step20, 1, True)} W/m²), and a second NASA model shows no global decline.</p>
+      <p class="muted">So we withdrew the claim. Checking how data were made, before trusting a trend, is now built in.</p>
     </div>
   </div>
-  <div class="foot"><span>Figure: NASA GLDAS-2.1 vs GLDAS-2.0 (same Noah model, different forcing). The tool rejects its own result when the evidence does not hold.</span><span>6 / 7</span></div>
+  <div class="foot"><span>NASA GLDAS-2.1 vs GLDAS-2.0 (same model, different inputs); NASA FLDAS soil water 2003–2024: no detectable trend.</span><span>6 / 7</span></div>
 </section>
 
-<!-- 7 EXPLORER -->
+<!-- 7 TRY IT -->
 <section class="slide s-explore">
-  <div class="eyebrow">Try it</div>
-  <h2>An explorer anyone can open: click a place, read its case file.</h2>
+  <div class="tag">Try it yourself</div>
+  <h2>Open it, click any place, see how sure we are</h2>
   <div class="row">
-    <div>{explorer}</div>
+    <div>{overview}</div>
     <div>
-      <ul class="next">
-        <li>Every land tile with its corrected significance, and a graded Discovery Card for each coherent cluster.</li>
-        {f'<li class="lab">{lab_line}</li>' if lab_line else ''}
-        <li>Next: more NASA variables, GPM IMERG as a further check, and a card for your own region.</li>
+      <div class="go">No code, no login, works on a phone:<br><a class="url" href="{esc(site)}">{esc(site_short)}</a></div>
+      <ul class="more">
+        <li><b>Six regional report cards</b>, one withdrawn result, and a satellite check on groundwater in northwest India.</li>
+        <li><b>A physics-aware AI forecaster</b> that predicts next month’s soil water while obeying the water balance. Its squared errors are about 20% smaller than a simple statistical model’s.</li>
+        <li><b>Next:</b> more NASA variables, more independent checks, and a report card for your own region.</li>
       </ul>
-      <div class="links">
-        <div>explorer → <a href="{esc(team.get("site_url"))}">{esc(team.get("site_url"))}</a></div>
-        <div>code → <a href="{esc(team.get("project_url"))}">{esc(team.get("project_url"))}</a></div>
-      </div>
-      <ul class="refs"><li class="q">References</li>
-        <li>Beaudoing &amp; Rodell (2020), GLDAS Noah V2.1, doi:{esc(ds.get("doi"))} · Rodell et al. (2004), BAMS 85</li>
-        <li>McNally et al. (2017), Sci. Data 4, 170012 · FLDAS Noah, doi:{esc(fl_doi or "10.5067/5NHC22T9375G")}</li>
-        <li>Funk et al. (2015), CHIRPS, Sci. Data 2 · Rodell et al. (2009), Nature 460, 999–1002</li>
-        <li>GRACE/GRACE-FO JPL mascons {esc(gr_rel)} · Watkins et al. (2015), JGR Solid Earth</li>
-        <li>GES DISC README, GLDAS V2 forcing changes · Benjamini &amp; Hochberg (1995) · Anselin (1995)</li>
+      <ul class="refs">
+        <li>NASA GLDAS-2.1 doi:{esc(ds.get("doi"))} · FLDAS doi:{esc(fl_doi or "10.5067/5NHC22T9375G")} · GRACE/GRACE-FO JPL mascons {esc(gr_rel)}</li>
+        <li>Rodell et al. 2004 · McNally et al. 2017 · Funk et al. 2015 · Rodell et al. 2009 · Benjamini &amp; Hochberg 1995 · Anselin 1995</li>
+        <li>Code: {esc(team.get("project_url"))}</li>
       </ul>
     </div>
   </div>
@@ -1136,6 +1109,13 @@ def main():
         ok = capture_explorer(explorer_png, case_id=card.get("id") if card else None)
         print(f"explorer screenshot: {'captured' if ok else 'FAILED'} -> {explorer_png}")
     explorer_uri = file_to_uri(explorer_png) if explorer_png.exists() else None
+    overview_png = DEMO / "explorer_overview.png"
+    if not (args.keep_explorer and overview_png.exists()):
+        ok = capture_explorer(overview_png)
+        print(f"overview screenshot: {'captured' if ok else 'FAILED'} -> {overview_png}")
+    overview_uri = file_to_uri(overview_png) if overview_png.exists() else None
+    names = {k: [short.get(c.get("id")) or str(c.get("place", "")).split(" (")[0]
+                 for c in cards if c.get("kind") == k] for k in ("wetting", "drying")}
 
     ac_fig = get(meta, "soil_water", "artifact_control", "figure", default=None)
     ac_png = None
@@ -1151,7 +1131,8 @@ def main():
     ctx = dict(meta=meta, team=team, card=card, retraction_card=retraction_card,
                ac_uri=ac_uri, pinn=pinn,
                line_uri=line_uri, map_uri=map_uri, soil_uri=soil_uri,
-               soil_breaks=soil_breaks, explorer_uri=explorer_uri,
+               soil_breaks=soil_breaks, explorer_uri=explorer_uri, overview_uri=overview_uri,
+               wet_names=names["wetting"], dry_names=names["drying"],
                n_cards=sum(1 for c in cards
                            if not str(c.get("title", "")).upper().startswith("TODO")))
     HTML_OUT.write_text(build_html(ctx), encoding="utf-8")
