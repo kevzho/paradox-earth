@@ -290,9 +290,8 @@ from our own results.
 
 An AI coding assistant was used to help write and review code, to design and run the calibration simulations and
 the GPU forecast-lab experiment, and to draft explanatory text (README, Discovery Card text, slide and video copy).
-Every number is computed by the code from NASA data (GLDAS-2.1, GLDAS-2.0, FLDAS, GRACE/GRACE-FO). The full
-disclosure, including the statement on who conceived the idea, is in [docs/SUBMISSION.md](docs/SUBMISSION.md)
-(section 6, to be completed and confirmed by the team before submission).
+Every number is computed by the code from NASA data (GLDAS-2.1, GLDAS-2.0, FLDAS, GRACE/GRACE-FO). The project
+idea and its framing came from the team.
 
 ## Reproduce
 
@@ -433,4 +432,3 @@ Not built yet: **ML discovery** (PCA, Isolation Forest, 1D-CNN encoder, contrast
 - The forecasting extension ships only if it passes Gate G (λ ablation + baseline comparison documented). Both
   are in `site/data/pinn.json` and the Forecast lab section above.
 
-Reviewer agent for code changes: `.claude/agents/code-reviewer.md` (lean, correctness only).

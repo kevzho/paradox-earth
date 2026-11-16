@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # torch is imported only when the PINN runs, never in the sta
 STATS_VARS = ("Rainf_f_tavg", "soil_water_0_200cm")
 FLAGSHIP = "Rainf_f_tavg"  # precipitation (rain + snow): the flagship variable for the headline summary
 
-# Homogeneity (§5, S1). GLDAS-2.1 radiation forcing changes (README_GLDAS2 §1.2.3, §1.5.3): an AGRMET shift detected
+# Homogeneity. GLDAS-2.1 radiation forcing changes (README_GLDAS2 §1.2.3, §1.5.3): an AGRMET shift detected
 # as a step at 2010-08, and the WWMCA degradation from 2024-07 followed by GALWEM radiation from 2025-06-09. Soil
 # water and other model states inherit these steps, so their statistics are restricted to one forcing regime (with
 # ~17 months spin-up after the 2010-08 step). Precipitation (GPCP-based) shows no step at these dates: full record.
@@ -192,7 +192,7 @@ def _analyse(job):
            "slope_pct_per_decade": tr.get("slope_pct_per_decade"), "trend_p": tr.get("p_value"),
            "var_ratio": emp.get("innovation_variance_ratio_late_over_early"), "var_p": emp.get("pw_bf_p"),
            "egarch_status": eg["egarch_status"]}
-    # only gate-passing fits are exported as volatility paths (§6 S4: otherwise ship the empirical baseline)
+    # only gate-passing fits are exported as volatility paths; otherwise the empirical baseline is used
     cv = eg.get("conditional_volatility") if eg["egarch_status"] == "fitted" else None
     return tr, var_rec, row, cv
 

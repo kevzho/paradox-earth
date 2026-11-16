@@ -235,7 +235,7 @@ def test_pipeline_end_to_end(raw_dir, tmp_path):
     assert out["qc"]["passed"]
 
 
-# ---- spatial statistics (§7) -------------------------------------------------------------------------------
+# ---- spatial statistics -------------------------------------------------------------------------------
 
 def _lattice(n_lat=30, n_lon=40, west=-180.0, deg=1.0):
     rows = [(f"tile_{s:+07.2f}_{w:+08.2f}", w, s, w + deg, s + deg)
