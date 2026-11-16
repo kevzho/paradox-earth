@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-15T23:52:39Z",
+ "generated_utc": "2026-11-16T03:45:34Z",
  "generator": "scripts/build_cards.py",
  "dataset": {
   "short_name": "GLDAS_NOAH025_M",
@@ -63,9 +63,9 @@
    "user": {
     "who": "An agricultural extension office in the central Sahel (e.g. a district extension team in Chad)",
     "decision": "Which millet and sorghum varieties and sowing windows to recommend to smallholders for the coming rainy season",
-    "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative; a detectable wetting trend supports testing longer-cycle varieties, while year-to-year variability still argues for drought-hedged recommendations."
+    "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative. A detectable wetting trend supports testing longer-cycle varieties, but rainfall still varies from year to year, so recommendations should hedge against drought."
    },
-   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
+   "evidence_level": "strong pattern: passes all 4 extra checks (time windows, neighbours, second rainfall record, literature)",
    "literature": [
     {
      "citation": "Biasutti, M. (2019). Rainfall trends in the African Sahel: Characteristics, processes, and causes. WIREs Climate Change, 10(4), e591.",
@@ -78,7 +78,7 @@
     "Percent changes look large in arid places because the baseline is small; read the mm/month figure alongside the percentage.",
     "Sahel rainfall recovery is partial and uneven; the western Sahel has recovered less than the centre.",
     "A wetter seasonal total can co-occur with more intense, less frequent storms; totals alone do not describe planting risk.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -138,9 +138,9 @@
    "user": {
     "who": "A water-resources bureau in Inner Mongolia or northeast China (e.g. the Liao River basin)",
     "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
-    "why_it_matters": "A detectable wetting trend means more recharge opportunity but also more flood-season water to route safely through cities."
+    "why_it_matters": "A detectable wetting trend means more rain to refill groundwater, but also more flood-season water to route safely through cities."
    },
-   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
+   "evidence_level": "strong pattern: passes all 4 extra checks (time windows, neighbours, second rainfall record, literature)",
    "literature": [
     {
      "citation": "Wu, K., Liu, H., Zhao, L., Lin, Y., & Yang, Z. (2022). The strengthening relationship between summer rainfall over North China and PDO since the mid-2000s. Frontiers in Earth Science, 10, 957940.",
@@ -151,7 +151,7 @@
    ],
    "caveats": [
     "The literature links this wetting to the Pacific Decadal Oscillation, so it may reverse when the PDO changes phase.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -213,7 +213,7 @@
     "decision": "Whether to invest in flood drainage and rain-fed kharif crop advisories, rather than only drought relief, in a historically arid district",
     "why_it_matters": "Infrastructure in arid districts was designed for scarcity; a detectable wetting trend means more monsoon water arriving where drainage and crop calendars were not planned for it."
    },
-   "evidence_level": "robust pattern: passes all 4 extra checks (windows, neighbours, independent data, literature)",
+   "evidence_level": "strong pattern: passes all 4 extra checks (time windows, neighbours, second rainfall record, literature)",
    "literature": [
     {
      "citation": "Joseph, L., Skliris, N., Dey, D., Marsh, R., Hirschi, J., et al. (2024). Increased Summer Monsoon Rainfall Over Northwest India Caused by Hadley Cell Expansion and Indian Ocean Warming. Geophysical Research Letters, 51, e2024GL108829.",
@@ -236,7 +236,7 @@
    ],
    "caveats": [
     "Percent changes look large in arid places because the baseline is small; check the mm/month figure too.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -316,7 +316,7 @@
    "caveats": [
     "Only part of this region lies in the 30-38°S core of the central-Chile megadrought studied in the literature; most of it is south-central Chile and Patagonia.",
     "The literature attributes part of the drought to natural variability; Paradox Earth does not attribute causes.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -400,8 +400,8 @@
     }
    ],
    "caveats": [
-    "Land-use change and climate variability co-occur here; the trend is associated with, not attributed to, either.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "Land-use change and climate variability both occur here; this analysis does not attribute the trend to either.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -480,7 +480,7 @@
    ],
    "caveats": [
     "Rain-gauge density in south-central Africa is among the lowest on Earth, so GPCP-based trends here carry extra uncertainty.",
-    "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+    "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not an independent rain-gauge record.",
     "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with detectable trends shrinks in shorter windows, and individual trends can weaken.",
     "Tile shares are after false-discovery correction; individual tiles can still be false positives."
    ],
@@ -501,7 +501,7 @@
    "region_id": null,
    "title": "Paradox Earth caught a false trend",
    "place": "Global land: soil water (GLDAS-2.1 Noah)",
-   "headline": "The apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around 2010-08 and 2024-07) and disappears in a consistently forced NASA product (FLDAS, 2003-2024: +5.0 mm/decade, p = 0.14, no detectable trend).",
+   "headline": "The apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the radiation data fed into the model (level shifts around 2010-08 and 2024-07) and disappears in a NASA land model with no such change in its input data (FLDAS, 2003-2024: +5.0 mm/decade, p = 0.14, no detectable trend).",
    "numbers": {
     "median_pct_per_decade": null,
     "median_slope_per_decade": null,
@@ -517,7 +517,7 @@
     {
      "check": "Homogeneity (break-point) check",
      "status": "fail",
-     "detail": "Soil water was the original headline, showing a 26-year global decline. Paradox Earth's own checks showed it is mostly two level shifts that follow documented changes in the radiation data driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window. README_GLDAS2 documents two problems in the model's radiation inputs (AGRMET/WWMCA): an apparent shift in the AGRMET climatology (section 1.5.3) and degraded WWMCA radiation from mid-2024 (section 1.2.3). The detected steps line up with both."
+     "detail": "Soil water was the original headline, showing a 26-year global decline. Paradox Earth's own checks showed it is mostly two sudden level shifts that follow documented changes in the radiation data fed into the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is not significant, so the trend was withdrawn and soil water is analysed only inside that window. README_GLDAS2 documents two problems in the model's radiation inputs (AGRMET/WWMCA): an apparent shift in the AGRMET climatology (section 1.5.3) and degraded WWMCA radiation from mid-2024 (section 1.2.3). The detected steps line up with both."
     },
     {
      "check": "Same model, different forcing (GLDAS-2.0 control)",
@@ -562,8 +562,8 @@
     }
    ],
    "caveats": [
-    "Withdrawn as a trend: the GLDAS-2.1 soil-water series is shown only as an example of a data artefact.",
-    "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; what is withdrawn is the long-term decline.",
+    "The GLDAS-2.1 soil-water series is withdrawn as a trend and shown only as an example of a data artefact.",
+    "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; only the long-term decline is withdrawn.",
     "FLDAS and GLDAS share the Noah land model, so FLDAS is independent in forcing, not in model physics.",
     "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break and against CHIRPS."
    ],

@@ -418,7 +418,7 @@ def evidence_level(checks):
     ran = [k for k in INDEPENDENT if k in st and st[k] != "not_run"]
     n_pass = sum(st.get(k) == "pass" for k in ran)
     if ran and n_pass == len(ran):
-        return f"robust pattern: passes all {len(ran)} extra checks (windows, neighbours, independent data, literature)"
+        return f"strong pattern: passes all {len(ran)} extra checks (time windows, neighbours, second rainfall record, literature)"
     return f"supported: passes {n_pass} of {len(ran)} extra checks"
 
 
@@ -467,7 +467,7 @@ def headline_for(numbers, place, sign, period, tile_deg, detectable=True):
     slope = numbers["median_slope_per_decade"]
     slope_txt = f"{slope:+.2f} mm/month" if slope is not None else "n/a"
     deg = "one-degree" if tile_deg == 1 else f"{tile_deg:g}-degree"
-    what = f"a detectable {word} trend" if detectable else f"a {word} tendency (not a robust trend)"
+    what = f"a detectable {word} trend" if detectable else f"a {word} tendency (not a detectable trend)"
     # `place` is shown right above the headline on every card, so it is not repeated here
     return (f"Across {numbers['n_tiles']} {deg} land tiles ({fmt_area(numbers['area_km2'])}), "
             f"GLDAS-2.1 precipitation shows {what} of "

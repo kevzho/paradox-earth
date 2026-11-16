@@ -434,10 +434,10 @@ def fallback_cards(regions, tiles_idx, tiles_rows):
 
 
 def pick_example_card(cards):
-    """Prefer a 'robust' card (Sahel, then North China, then any robust one),
+    """Prefer a strong-pattern card (Sahel, then North China, then any robust one),
     then the Chile drying card, then any drying card, then the first."""
     cand = [c for c in cards if c.get("kind") in ("drying", "wetting")]
-    robust = [c for c in cand if str(c.get("evidence_level", "")).lower().startswith("robust")]
+    robust = [c for c in cand if str(c.get("evidence_level", "")).lower().startswith(("strong", "robust"))]
     for key in ("sahel", "north_china"):
         for c in robust:
             if key in str(c.get("id", "")).lower() or key.replace("_", " ") in (
@@ -757,7 +757,7 @@ b {{ font-weight: 700; }}
 .s-title .bar {{ display: flex; height: 16px; width: 100%; margin: 24px 0 22px; border: 2px solid var(--edge); }}
 .s-title .bar i {{ display: block; height: 100%; }}
 .s-title .tagline {{ font-size: 27px; line-height: 1.25; max-width: 1100px; }}
-.s-title .tagline b {{ color: var(--hl); }}
+.kicker {{ font-size: 16px; font-weight: 600; color: var(--muted); margin-bottom: 14px; }}
 .s-title .try {{ margin-top: 20px; font-size: 22px; display: flex; align-items: center; gap: 16px; }}
 .s-title .try .url {{ font-size: 40px; }}
 .credits {{ display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 28px; border-top: 2px solid var(--edge); padding-top: 16px; }}
@@ -808,13 +808,13 @@ b {{ font-weight: 700; }}
 .checks li {{ display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 7px 0; border-bottom: 2px solid var(--rule); font-size: 17px; line-height: 1.3; }}
 .checks .m {{ font: 800 22px/1.1 var(--display); text-align: center; }}
 .checks .pass .m {{ color: #7fd1ae; }} .checks .partial .m {{ color: #e8c46a; }} .checks .fail .m {{ color: var(--fail); }}
-.who {{ margin-top: 10px; border-left: 6px solid var(--dry); padding: 2px 0 2px 12px; font-size: 16px; line-height: 1.35; }}
-.who b {{ display: block; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }}
+.who {{ margin-top: 12px; font-size: 16px; line-height: 1.35; }}
+.who .who-k {{ display: block; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }}
 
 /* 6 retraction */
 .s-retract .row {{ display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; margin-top: 16px; }}
 .s-retract .story p {{ font-size: 19px; line-height: 1.4; margin-bottom: 10px; }}
-.s-retract .story p b {{ color: var(--hl); }}
+
 .stamp {{ display: inline-block; background: var(--fail); color: #111; font: 800 26px/1 var(--display);
   letter-spacing: .06em; padding: 8px 14px; margin-bottom: 14px; box-shadow: 4px 4px 0 #000; }}
 .s-retract .fig {{ border: 2px solid var(--edge); box-shadow: 6px 6px 0 #000; }}
@@ -823,8 +823,8 @@ b {{ font-weight: 700; }}
 .s-explore .row {{ display: grid; grid-template-columns: 1.2fr 1fr; gap: 34px; margin-top: 16px; }}
 .s-explore .go {{ font-size: 20px; margin-bottom: 12px; }}
 .s-explore .go .url {{ font-size: 46px; margin-top: 6px; }}
-.s-explore ul.more {{ list-style: none; display: grid; gap: 10px; margin-top: 8px; }}
-.s-explore ul.more li {{ font-size: 17px; line-height: 1.35; padding-left: 14px; border-left: 4px solid var(--edge); }}
+.s-explore ul.more {{ list-style: disc; display: grid; gap: 8px; margin: 8px 0 0 24px; }}
+.s-explore ul.more li {{ font-size: 17px; line-height: 1.35; }}
 .refs {{ margin-top: 12px; border-top: 2px solid var(--rule); padding-top: 8px; }}
 .refs li {{ font-size: 11.5px; line-height: 1.38; color: var(--muted); list-style: none; }}
 
@@ -836,10 +836,10 @@ b {{ font-weight: 700; }}
 <!-- 1 TITLE -->
 <section class="slide s-title">
   <div>
-    <div class="tag">{esc(team.get("event", "NASA International Space Apps Challenge"))} · {esc(team.get("challenge", m.get("challenge")))}</div>
+    <p class="kicker">{esc(team.get("event", "NASA International Space Apps Challenge"))} · {esc(team.get("challenge", m.get("challenge")))}</p>
     <h1>{esc(m.get("project", "Paradox Earth"))}</h1>
     <div class="bar"><i style="flex:{reg.get('share_area_down') or 1};background:var(--dry)"></i><i style="flex:{max(0.0, 1 - (reg.get('share_area_up') or 0) - (reg.get('share_area_down') or 0))};background:var(--land)"></i><i style="flex:{reg.get('share_area_up') or 1};background:var(--wet)"></i></div>
-    <p class="tagline">Averaged over all the world’s land, rainfall has barely changed in {n_years} years. Look region by region and <b>an area about the size of the United States</b> is getting wetter or drier. Paradox Earth is an interpretable, human-centered trend detector: it explains every finding in plain language, and its checks caught one of our own findings as wrong.</p>
+    <p class="tagline">Averaged over all the world’s land, rainfall has barely changed in {n_years} years. Look region by region and an area about the size of the United States is getting wetter or drier. Paradox Earth is an interpretable, human-centered trend detector: it explains every finding in plain language, and its checks caught one of our own findings as wrong.</p>
     <div class="try">Try it live: <a class="url" href="{esc(site)}">{esc(site_short)}</a></div>
   </div>
   <dl class="credits">
@@ -852,7 +852,6 @@ b {{ font-weight: 700; }}
 
 <!-- 2 PARADOX -->
 <section class="slide s-paradox">
-  <div class="tag">The puzzle</div>
   <h2>Add up all the world’s land and rainfall looks flat</h2>
   <div class="row">
     <div><img class="fig" src="{ctx["line_uri"]}" alt="Global land-average rainfall, 2000 to 2025: a flat line">
@@ -868,16 +867,15 @@ b {{ font-weight: 700; }}
 
 <!-- 3 SPLIT -->
 <section class="slide s-split">
-  <div class="tag">What the average hides</div>
-  <h2>Underneath: {fmt_area(area_tot)} is getting wetter or drier</h2>
+  <h2>{fmt_area(area_tot)} is getting wetter or drier</h2>
   <div class="row">
     <div>
       <img class="fig" src="{ctx["map_uri"]}" alt="World map: places with a clear wetting or drying trend">
       <div class="legend"><span style="--c:{WET}">getting wetter</span><span style="--c:{DRY}">getting drier</span><span style="--c:{LAND}">no clear change</span></div>
     </div>
     <div>
-      <div class="num box w"><div class="v wet">{fmt_area(area_up)}</div><div class="k">getting <b>wetter</b> ({fmt_pct(reg.get("share_area_up"))} of land)</div><div class="where">{wet_names}</div></div>
-      <div class="num box d"><div class="v dry">{fmt_area(area_dn)}</div><div class="k">getting <b>drier</b> ({fmt_pct(reg.get("share_area_down"))} of land)</div><div class="where">{dry_names}</div></div>
+      <div class="num box w"><div class="v wet">{fmt_area(area_up)}</div><div class="k">getting wetter ({fmt_pct(reg.get("share_area_up"))} of land)</div><div class="where">{wet_names}</div></div>
+      <div class="num box d"><div class="v dry">{fmt_area(area_dn)}</div><div class="k">getting drier ({fmt_pct(reg.get("share_area_down"))} of land)</div><div class="where">{dry_names}</div></div>
       <p class="muted" style="font-size:15px;line-height:1.35">Together, about the size of the United States. The shares depend on the period (2003–2025: {fmt_pct(get(wins, "2003-2025", "share_area_up"))} wetter, {fmt_pct(get(wins, "2003-2025", "share_area_down"))} drier), but all six regions keep their direction in every period.</p>
     </div>
   </div>
@@ -886,8 +884,7 @@ b {{ font-weight: 700; }}
 
 <!-- 4 HOW -->
 <section class="slide s-how">
-  <div class="tag">How it works</div>
-  <h2>Three steps, each built so it is hard to fool</h2>
+  <h2>How it works</h2>
   <div class="steps">
     <div class="box"><div class="n">1</div><div class="t">Split the land</div><p>We divide all land into {n_tiles:,} squares, each about 100&nbsp;km across, and take {n_years} years of monthly rainfall for each one from NASA.</p></div>
     <div class="box"><div class="n">2</div><div class="t">Test each square</div><p>Wet and dry spells can fake a trend. On made-up records with no trend, the usual test raised false alarms 29–34% of the time. Ours raised them 3–6% of the time.</p></div>
@@ -905,8 +902,7 @@ b {{ font-weight: 700; }}
 
 <!-- 5 REPORT CARD (DEMO) -->
 <section class="slide s-card">
-  <div class="tag">Live demo · {esc(site_short)}</div>
-  <h2>Every region comes with a report card</h2>
+  <h2>Live demo</h2>
   <div class="row">
     <div class="demo">
       <div style="position:relative">{explorer}
@@ -924,7 +920,7 @@ b {{ font-weight: 700; }}
       <div class="big {'dry' if card.get('kind') == 'drying' else 'wet'}">Rain {'down' if (num.get("median_pct_per_decade") or 0) < 0 else 'up'} {fmt_num(abs(num.get("median_pct_per_decade") or 0), 0)}% per decade</div>
       <div class="sub">{num.get("n_tiles")} squares, {fmt_area(num.get("area_km2"))}, {y0}–{y1}</div>
       <ul class="checks">{plain_checks(card.get("robustness"), card.get("literature"))}</ul>
-      <div class="who"><b>Who could use this</b>{esc(user.get("who"))}: {esc(str(user.get("decision", "")).rstrip("."))}.</div>
+      <div class="who"><span class="who-k">Who could use this</span>{esc(user.get("who"))}: {esc(str(user.get("decision", "")).rstrip("."))}.</div>
     </div>
   </div>
   <div class="foot"><span>Screenshot of the live explorer. Weaker regions are shown too, with their lower grades.</span><span>5 / 7</span></div>
@@ -932,13 +928,12 @@ b {{ font-weight: 700; }}
 
 <!-- 6 RETRACTION -->
 <section class="slide s-retract">
-  <div class="tag">It caught its own mistake</div>
   <h2>Our first headline was wrong, and our own checks caught it</h2>
   <div class="row">
     <div>{ac_fig}</div>
     <div class="story">
       <div class="stamp">WITHDRAWN</div>
-      <p>Our first finding was that <b>soil water was falling worldwide</b>.</p>
+      <p>Our first finding was that soil water was falling worldwide.</p>
       <p>Our checks found most of the fall came from a sudden drop in 2010, exactly when NASA changed the sunlight data that feeds the model: sunlight jumped by {fmt_num(sw_step, 1)} W/m².</p>
       <p>The same model run with the older data shows no such jump ({fmt_num(sw_step20, 1, True)} W/m²), and a second NASA model shows no global decline.</p>
       <p class="muted">So we withdrew the claim. Checking how data were made, before trusting a trend, is now built in.</p>
@@ -949,16 +944,15 @@ b {{ font-weight: 700; }}
 
 <!-- 7 TRY IT -->
 <section class="slide s-explore">
-  <div class="tag">Try it yourself</div>
   <h2>Open it, click any place, see how sure we are</h2>
   <div class="row">
     <div>{overview}</div>
     <div>
       <div class="go">No code, no login, works on a phone:<br><a class="url" href="{esc(site)}">{esc(site_short)}</a></div>
       <ul class="more">
-        <li><b>Six regional report cards</b>, one withdrawn result, and a satellite check on groundwater in northwest India.</li>
-        <li><b>A physics-aware AI forecaster</b> that predicts next month’s soil water while obeying the water balance. Its squared errors are about 20% smaller than a simple statistical model’s.</li>
-        <li><b>Next:</b> more NASA variables, more independent checks, and a report card for your own region.</li>
+        <li>Six regional report cards, one withdrawn result, and a satellite check on groundwater in northwest India.</li>
+        <li>A physics-aware AI forecaster that predicts next month’s soil water while obeying the water balance. Its squared errors are about 20% smaller than a simple statistical model’s.</li>
+        <li>Next: more NASA variables, more independent checks, and a report card for your own region.</li>
       </ul>
       <ul class="refs">
         <li>NASA GLDAS-2.1 doi:{esc(ds.get("doi"))} · FLDAS doi:{esc(fl_doi or "10.5067/5NHC22T9375G")} · GRACE/GRACE-FO JPL mascons {esc(gr_rel)}</li>

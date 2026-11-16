@@ -176,14 +176,15 @@ def main():
                        "queen weights with dateline wrap; kNN and Getis-Ord Gi* robustness",
             "regions": regions["rule"]},
         "caveats": [
-            "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
+            "GLDAS-2.1 precipitation is model forcing (the weather data fed into the model) derived from GPCP; it is not "
+            "an independent rain-gauge record.",
             "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with "
             "detectable trends shrinks in shorter windows, and individual trends can weaken.",
             "Tile shares are after false-discovery correction; individual tiles can still be false positives."],
         "retraction": {"breakpoints": ["2010-08", "2024-07"], "window": ["2012-01", "2024-06"], "text": (
                        "Soil water was the original headline, showing a 26-year global decline. Paradox Earth's own checks "
-                       "showed it is mostly two level shifts that follow documented changes in the radiation data "
-                       "driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC "
+                       "showed it is mostly two sudden level shifts that follow documented changes in the radiation data "
+                       "fed into the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC "
                        "README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is "
                        "not significant, so the trend was withdrawn and soil water is analysed only inside that "
                        "window.")},

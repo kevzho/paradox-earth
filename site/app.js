@@ -544,7 +544,7 @@
     setPreReveal(step === 1 && S.reveal < 1);
     if (step === 1) {
       panel.innerHTML = `${head}
-        <div class="agg">${aggregateSVG()}<p class="agg-caption">Fitted trend (seasonal regression) of the land-area-weighted average. Its shaded 95% confidence band is about as wide as the line at this scale; the p-value allows for autocorrelation.</p></div>
+        <div class="agg">${aggregateSVG()}<p class="agg-caption">Fitted trend (seasonal regression) of the land-area-weighted average. Its shaded 95% confidence band is about as wide as the line at this scale; the p-value allows for persistence from one month to the next (autocorrelation).</p></div>
         <span class="verdict">${notDetect ? "No detectable global trend" : "Detectable global trend"}</span>
         <p>The land-average fitted trend is <span class="num">${fmt(a.slope, 2)}</span>&nbsp;mm/month per decade (<span class="num">${sgn(a.slope_pct_per_decade)}%</span>/decade; 95%&nbsp;CI <span class="num">${fmt(a.ci95[0], 2)}&nbsp;to&nbsp;${fmt(a.ci95[1], 2)}</span>&nbsp;mm/month per decade, p&nbsp;=&nbsp;<span class="num">${pval(a.p_value)}</span>). By this average, little is changing.</p>
         <div class="btn-row"><button class="btn" type="button" id="revealBtn">Reveal what the average hides</button></div>`;
@@ -706,6 +706,8 @@
   };
   const STATUS_LABEL = { pass: "Pass", partial: "Partial", fail: "Fail", not_run: "Not run" };
   const KIND_LABEL = { wetting: "Wetting region", drying: "Drying region", retraction: "Retraction", observation: "Satellite observation", local: "Local region" };
+  // kinds whose label is not shown (the retraction card says what it is in its own title and stamp)
+  const HIDE_KIND = new Set(["retraction"]);
   const normStatus = (s) => (STATUS_LABEL[s] ? s : "not_run");
 
   function gradeHTML(checks) {
@@ -764,7 +766,7 @@
     const checks = c.robustness || [];
     const u = c.user || {};
     const showBtn = c.region_id && S.regionById.has(c.region_id);
-    const colA = `<div class="card-kind"><span class="dot"></span>${esc(KIND_LABEL[kind])}${kind === "local" && !c.region_id ? ` <span class="pill">Placeholder</span>` : ""}</div>
+    const colA = `${HIDE_KIND.has(kind) ? "" : `<div class="card-kind"><span class="dot"></span>${esc(KIND_LABEL[kind])}${kind === "local" && !c.region_id ? ` <span class="pill">Placeholder</span>` : ""}</div>`}
       ${kind === "retraction" ? `<span class="stamp">Rejected by its own detector</span>` : ""}
       <h3 class="card-title" id="t-${esc(c.id)}">${et(c.title)}</h3>
       ${c.place ? `<p class="place">${et(c.place)}</p>` : ""}
@@ -828,7 +830,7 @@
     const note = $("#caseNotice");
     if (!S.cardsFromFile) {
       note.hidden = false;
-      note.textContent = "The graded case files are not published yet. Below is the detector’s raw output: the retraction and the largest regions, with checks that have not run marked as such.";
+      note.textContent = "The graded case files are not published yet. Below is the detector’s raw output: the withdrawn soil-water finding and the largest regions, with checks that have not run marked as such.";
     }
     document.querySelectorAll("#cases [data-case]").forEach((b) => b.addEventListener("click", () => openCase(b.dataset.case)));
   }
@@ -846,13 +848,13 @@
     render();
     const checks = c.robustness || [], u = c.user || {};
     panel.innerHTML = `<button class="back" type="button" id="backBtn">← Back to the overview</button>
-      <p class="eyebrow">Case file · ${esc(KIND_LABEL[c.kind] || c.kind)}</p>
+      <p class="eyebrow">Case file${HIDE_KIND.has(c.kind) ? "" : ` · ${esc(KIND_LABEL[c.kind] || c.kind)}`}</p>
       <h1 tabindex="-1">${et(c.title)}</h1>
       ${c.place ? `<p class="muted">${et(c.place)}</p>` : ""}
       <p>${et(c.headline)}</p>
       ${checks.length ? gradeHTML(checks) + checksHTML(checks, true) : ""}
       ${u.who ? `<div class="user" style="margin-top:1rem"><div class="user-label">Who acts on this</div><div class="who">${et(u.who)}</div>${u.decision ? `<p class="decision">${et(u.decision)}</p>` : ""}</div>` : ""}
-      ${r ? `<p class="small muted" style="margin-top:1rem">Highlighted tiles are the region’s members. ${coarse ? "Tap" : "Click"} any tile for its monthly record.</p>` : ""}
+      ${r ? `<p class="small muted" style="margin-top:1rem">Highlighted tiles belong to this region. ${coarse ? "Tap" : "Click"} any tile for its monthly record.</p>` : ""}
       <div class="btn-row"><a class="btn ghost" href="#case-${esc(c.id)}">Read the full case file</a></div>`;
     $("#backBtn").addEventListener("click", backToOverview);
     setURL(null, id);
@@ -894,7 +896,7 @@
     const r = S.meta.retraction || {};
     const per = S.meta.dataset?.period || [];
     const bps = (r.breakpoints || []).map(esc);
-    $("#soilLede").textContent = `GLDAS-2.1 soil water first looked like a ${per.length ? `${+yearOf(per[1]) - +yearOf(per[0]) + 1}-year ` : ""}global decline. Paradox Earth ran three NASA cross-checks on its own headline: a second version of the same model, a NASA land model with consistent forcing (the weather data fed into the model), and satellite gravity. The second version and the consistently forced model show the decline is not a detectable climate signal, so it was withdrawn${bps.length ? ` (level shifts at ${bps.join(" and ")})` : ""}. Satellite gravity weighs all water, so it can neither confirm nor refute a soil-only trend.`;
+    $("#soilLede").textContent = `GLDAS-2.1 soil water first looked like a ${per.length ? `${+yearOf(per[1]) - +yearOf(per[0]) + 1}-year ` : ""}global decline. We ran three NASA cross-checks on our own headline: a second version of the same model, a NASA land model with consistent forcing (the weather data fed into the model), and satellite gravity. The second version and the consistently forced model show the decline is not a detectable climate signal, so we withdrew it${bps.length ? ` (level shifts at ${bps.join(" and ")})` : ""}. Satellite gravity weighs all water, so it can neither confirm nor refute a soil-only trend.`;
     if (ac?.figure) {
       const img = $("#soilImg");
       img.src = ac.figure;
@@ -951,7 +953,7 @@
       </article>`);
     }
     $("#soilSteps").innerHTML = steps.join("");
-    $("#soilLinks").innerHTML = caseLink("retraction", "Read the retraction case file") + caseLink("observation", "Read the GRACE case file");
+    $("#soilLinks").innerHTML = caseLink("retraction", "Read the soil-water case file") + caseLink("observation", "Read the GRACE case file");
     $("#soil").hidden = false; $("#navSoil").hidden = false;
   }
 
@@ -1063,7 +1065,7 @@
     const x = m.cross_checks?.precip_chirps_fldas;
     if (x && x.sign_match_area_sig_either != null) {
       const w = x.window || [];
-      $("#crossText").innerHTML = `GLDAS-2.1 precipitation is GPCP-based model forcing, so the detector repeats the trend test on NASA FLDAS precipitation, which is built from CHIRPS (${esc(w[0] || "")} to ${esc(w[1] || "")}${x.n_tiles ? `, ${x.n_tiles.toLocaleString("en-US")} tiles` : ""}). `
+      $("#crossText").innerHTML = `GLDAS-2.1 precipitation is model input built from GPCP, so the detector repeats the trend test on NASA FLDAS precipitation, which is built from CHIRPS (${esc(w[0] || "")} to ${esc(w[1] || "")}${x.n_tiles ? `, ${x.n_tiles.toLocaleString("en-US")} tiles` : ""}). `
         + `Where either product shows an FDR-significant trend, the signs match over <span class="num">${pct(x.sign_match_area_sig_either, 0)}</span> of the land area`
         + `${x.sign_match_area_sig_both != null ? `, and over <span class="num">${pct(x.sign_match_area_sig_both, 0)}</span> where both do${x.n_sig_both != null ? ` (${x.n_sig_both} tiles)` : ""}` : ""}. `
         + `${x.spearman_slopes_all != null ? `Across all tiles the trend slopes have a Spearman rank correlation of <span class="num">${fmt(x.spearman_slopes_all, 2)}</span>${x.sign_match_area_all != null ? ` and the same sign over <span class="num">${pct(x.sign_match_area_all, 0)}</span> of land` : ""}. ` : ""}`

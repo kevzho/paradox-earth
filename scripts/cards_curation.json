@@ -20,7 +20,7 @@
       "user": {
         "who": "An agricultural extension office in the central Sahel (e.g. a district extension team in Chad)",
         "decision": "Which millet and sorghum varieties and sowing windows to recommend to smallholders for the coming rainy season",
-        "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative; a detectable wetting trend supports testing longer-cycle varieties, while year-to-year variability still argues for drought-hedged recommendations."
+        "why_it_matters": "Advice built on the drought decades of the 1970s-80s may now be too conservative. A detectable wetting trend supports testing longer-cycle varieties, but rainfall still varies from year to year, so recommendations should hedge against drought."
       },
       "literature": [
         {
@@ -51,7 +51,7 @@
       "user": {
         "who": "A water-resources bureau in Inner Mongolia or northeast China (e.g. the Liao River basin)",
         "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
-        "why_it_matters": "A detectable wetting trend means more recharge opportunity but also more flood-season water to route safely through cities."
+        "why_it_matters": "A detectable wetting trend means more rain to refill groundwater, but also more flood-season water to route safely through cities."
       },
       "literature": [
         {
@@ -265,7 +265,7 @@
         }
       ],
       "caveats": [
-        "Land-use change and climate variability co-occur here; the trend is associated with, not attributed to, either."
+        "Land-use change and climate variability both occur here; this analysis does not attribute the trend to either."
       ],
       "map_label": "SW Amazon"
     },
@@ -308,7 +308,7 @@
   "retraction": {
     "title": "Paradox Earth caught a false trend",
     "place": "Global land: soil water (GLDAS-2.1 Noah)",
-    "headline_template": "The apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around {breaks}) and disappears in a consistently forced NASA product (FLDAS, {fldas_window}: {fldas_slope} mm/decade, p = {fldas_p}, {fldas_verdict}).",
+    "headline_template": "The apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the radiation data fed into the model (level shifts around {breaks}) and disappears in a NASA land model with no such change in its input data (FLDAS, {fldas_window}: {fldas_slope} mm/decade, p = {fldas_p}, {fldas_verdict}).",
     "user": {
       "who": "Teachers and students using the Paradox Earth explorer",
       "decision": "Whether to trust a dramatic trend line before checking how the data were made",
@@ -335,8 +335,8 @@
       }
     ],
     "caveats": [
-      "Withdrawn as a trend: the GLDAS-2.1 soil-water series is shown only as an example of a data artefact.",
-      "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; what is withdrawn is the long-term decline.",
+      "The GLDAS-2.1 soil-water series is withdrawn as a trend and shown only as an example of a data artefact.",
+      "The 2011-2013 dip itself appears in both GLDAS versions, so it is likely a real dry spell; only the long-term decline is withdrawn.",
       "FLDAS and GLDAS share the Noah land model, so FLDAS is independent in forcing, not in model physics.",
       "Precipitation (the variable we do report) comes from GPCP-based forcing and is checked for the same kind of break and against CHIRPS."
     ]
