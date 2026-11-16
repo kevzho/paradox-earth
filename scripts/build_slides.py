@@ -928,15 +928,14 @@ b {{ font-weight: 700; }}
 
 <!-- 6 RETRACTION -->
 <section class="slide s-retract">
-  <h2>Our first headline was wrong, and our own checks caught it</h2>
+  <h2>We withdrew our soil-water finding</h2>
   <div class="row">
     <div>{ac_fig}</div>
     <div class="story">
-      <div class="stamp">WITHDRAWN</div>
       <p>Our first finding was that soil water was falling worldwide.</p>
       <p>Our checks found most of the fall came from a sudden drop in 2010, exactly when NASA changed the sunlight data that feeds the model: sunlight jumped by {fmt_num(sw_step, 1)} W/m².</p>
       <p>The same model run with the older data shows no such jump ({fmt_num(sw_step20, 1, True)} W/m²), and a second NASA model shows no global decline.</p>
-      <p class="muted">So we withdrew the claim. Checking how data were made, before trusting a trend, is now built in.</p>
+      <p class="muted">The detector now checks how the data were made before it trusts a trend.</p>
     </div>
   </div>
   <div class="foot"><span>NASA GLDAS-2.1 vs GLDAS-2.0 (same model, different inputs); NASA FLDAS soil water 2003–2024: no detectable trend.</span><span>6 / 7</span></div>
@@ -944,7 +943,7 @@ b {{ font-weight: 700; }}
 
 <!-- 7 TRY IT -->
 <section class="slide s-explore">
-  <h2>Open it, click any place, see how sure we are</h2>
+  <h2>Try the explorer</h2>
   <div class="row">
     <div>{overview}</div>
     <div>
