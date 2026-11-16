@@ -56,7 +56,7 @@ def soil_water_story(artifact: Path, fldas: Path, grace: Path) -> dict:
             "headline": {k: v for k, v in h.items() if isinstance(v, (int, float, str, list))},
             "figure": "../demo/artifact_control.png",
             "reading": ("Incoming solar radiation steps up only in GLDAS-2.1's forcing at 2010-08, and evaporation responds "
-                        "only in 2.1. The 2011-2013 soil-water dip appears in both versions, deeper in 2.1: the forcing "
+                        "only in 2.1. The 2011-2013 soil-water dip appears in both versions, deeper in 2.1, so the forcing "
                         "change exaggerated a real dip into an apparent long-term decline.")}
     fh = fldas / "headline_soil_water_0_200cm.json"
     if fh.exists():
@@ -84,7 +84,8 @@ def soil_water_story(artifact: Path, fldas: Path, grace: Path) -> dict:
                 "hotspots": {k: {kk: v.get(kk) for kk in ("grace_mean_slope_mm_decade", "model_mean_slope_mm_decade",
                                                           "n_grace_sig", "n_boxes")}
                              for k, v in (c.get("hotspots") or {}).items()},
-                "note": "GRACE measures total water storage (incl. groundwater, surface water, ice); compare signs, not sizes"}
+                # the page already says GRACE weighs all water (groundwater, lakes, ice) right above this note
+                "note": "compare signs, not sizes"}
     return story
 
 
@@ -176,10 +177,11 @@ def main():
             "regions": regions["rule"]},
         "caveats": [
             "GLDAS-2.1 precipitation is model forcing derived from GPCP; it is not an independent rain-gauge record.",
-            "Trends are statistical over 2000-2025; they shrink in shorter windows and do not identify causes.",
+            "Trends are statistical estimates over 2000-2025 and do not identify causes; the share of land with "
+            "detectable trends shrinks in shorter windows, and individual trends can weaken.",
             "Tile shares are after false-discovery correction; individual tiles can still be false positives."],
         "retraction": {"breakpoints": ["2010-08", "2024-07"], "window": ["2012-01", "2024-06"], "text": (
-                       "Soil water was the original headline: a 26-year global decline. Paradox Earth's own checks "
+                       "Soil water was the original headline, showing a 26-year global decline. Paradox Earth's own checks "
                        "showed it is mostly two level shifts that follow documented changes in the radiation data "
                        "driving the GLDAS model (a step in 2010-08 and a degraded period from 2024-07; GES DISC "
                        "README_GLDAS2). Within the single consistent period 2012-01 to 2024-06 the global decline is "

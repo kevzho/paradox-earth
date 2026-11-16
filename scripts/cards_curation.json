@@ -51,7 +51,7 @@
       "user": {
         "who": "A water-resources bureau in Inner Mongolia or northeast China (e.g. the Liao River basin)",
         "decision": "How to set seasonal reservoir operating rules and groundwater-pumping quotas, and how to size urban flood drainage",
-        "why_it_matters": "A detectable wetting trend changes both sides of the ledger: more recharge opportunity, but also more flood-season water to route safely through cities."
+        "why_it_matters": "A detectable wetting trend means more recharge opportunity but also more flood-season water to route safely through cities."
       },
       "literature": [
         {
@@ -75,7 +75,7 @@
         "centroid_lon": 73.3,
         "max_dist_deg": 8.0
       },
-      "title": "The desert edge of the monsoon gets wetter",
+      "title": "Northwest India and Pakistan got wetter, 2000-2025",
       "place": "Northwest India and Pakistan (Thar Desert and Indus plains)",
       "user": {
         "who": "A district disaster-management and irrigation planning office in Rajasthan or Sindh",
@@ -157,7 +157,7 @@
           "citation": "Sun, C., Liu, Y., & Zhang, J. (2020). Roles of Sea Surface Temperature Warming and Loss of Arctic Sea Ice in the Enhanced Summer Wetting Trend Over Northeastern Siberia During Recent Decades. Journal of Geophysical Research: Atmospheres, 125(18), e2020JD032557.",
           "url_or_doi": "https://doi.org/10.1029/2020JD032557",
           "agrees": "partly",
-          "note": "Their wetting region (100-170E) lies east of this cluster; consistent in direction but not the same area."
+          "note": "Their wetting region (100-170E) lies east of this one; consistent in direction but not the same area."
         }
       ],
       "caveats": [
@@ -201,7 +201,7 @@
         "centroid_lon": -71.5,
         "max_dist_deg": 9.0
       },
-      "title": "Drying along the southern Andes",
+      "title": "The southern Andes got drier, 2000-2025",
       "place": "South-central Chile to southern Patagonia (34-54°S, Chile and western Argentina)",
       "user": {
         "who": "A hydropower and water planner for the Biobío-to-Aysén river basins (Chile)",
@@ -213,17 +213,17 @@
           "citation": "Garreaud, R. D., Boisier, J. P., Rondanelli, R., Montecinos, A., Sepulveda, H. H., & Veloso-Aguila, D. (2020). The Central Chile Mega Drought (2010-2018): A climate dynamics perspective. International Journal of Climatology, 40(1), 421-439.",
           "url_or_doi": "https://doi.org/10.1002/joc.6219",
           "agrees": "partly",
-          "note": "Documents drying in central Chile (30-38°S); this cluster is mostly further south."
+          "note": "Documents drying in central Chile (30-38°S); this region is mostly further south."
         },
         {
           "citation": "Garreaud, R. D., Alvarez-Garreton, C., Barichivich, J., et al. (2017). The 2010-2015 megadrought in central Chile: impacts on regional hydroclimate and vegetation. Hydrology and Earth System Sciences, 21, 6307-6327.",
           "url_or_doi": "https://doi.org/10.5194/hess-21-6307-2017",
           "agrees": "partly",
-          "note": "Documents the megadrought core around 30-38S; this cluster extends further south into Patagonia."
+          "note": "Documents the megadrought core around 30-38S; this region extends further south into Patagonia."
         }
       ],
       "caveats": [
-        "Only part of this cluster lies in the 30-38°S core of the central-Chile megadrought studied in the literature; most of it is south-central Chile and Patagonia.",
+        "Only part of this region lies in the 30-38°S core of the central-Chile megadrought studied in the literature; most of it is south-central Chile and Patagonia.",
         "The literature attributes part of the drought to natural variability; Paradox Earth does not attribute causes."
       ],
       "map_label": "S Chile / Patagonia"
@@ -237,7 +237,7 @@
         "centroid_lon": -63.8,
         "max_dist_deg": 8.0
       },
-      "title": "The southwestern Amazon is drying",
+      "title": "The southwestern Amazon got drier, 2000-2025",
       "place": "Southwestern Amazon (Rondônia and southern Amazonas, Brazil)",
       "user": {
         "who": "An agricultural climate-risk zoning analyst for Rondônia (Brazil's western soy, maize and cattle frontier)",
@@ -255,7 +255,7 @@
           "citation": "Marengo, J. A., Jimenez, J. C., Espinoza, J. C., Cunha, A. P., & Aragao, L. E. O. (2022). Increased climate pressure on the agricultural frontier in the Eastern Amazonia-Cerrado transition zone. Scientific Reports, 12, 457.",
           "url_or_doi": "https://doi.org/10.1038/s41598-021-04241-4",
           "agrees": "partly",
-          "note": "Strongest drying is in the eastern Amazonia-Cerrado transition, east of this cluster."
+          "note": "Strongest drying is in the eastern Amazonia-Cerrado transition, east of this region."
         },
         {
           "citation": "Marengo, J. A., Souza, C. M., Thonicke, K., et al. (2018). Changes in Climate and Land Use Over the Amazon Region: Current and Future Variability and Trends. Frontiers in Earth Science, 6, 228.",
@@ -278,7 +278,7 @@
         "centroid_lon": 29.4,
         "max_dist_deg": 8.0
       },
-      "title": "Drying along the middle Zambezi",
+      "title": "The middle Zambezi got drier, 2000-2025",
       "place": "Middle Zambezi basin (southern Zambia and northern Zimbabwe)",
       "user": {
         "who": "A hydropower and water-allocation planner for Lake Kariba on the middle Zambezi (Zambia and Zimbabwe)",
@@ -290,7 +290,7 @@
           "citation": "Hua, W., Zhou, L., Chen, H., Nicholson, S. E., Raghavendra, A., & Jiang, Y. (2016). Possible causes of the Central Equatorial African long-term drought. Environmental Research Letters, 11, 124002.",
           "url_or_doi": "https://doi.org/10.1088/1748-9326/11/12/124002",
           "agrees": "partly",
-          "note": "Long-term drying over Central Equatorial Africa since the 1990s, mainly April-June and centred north of this cluster."
+          "note": "Long-term drying over Central Equatorial Africa since the 1990s, mainly April-June and centred north of this region."
         },
         {
           "citation": "Zhou, L., Tian, Y., Myneni, R. B., et al. (2014). Widespread decline of Congo rainforest greenness in the past decade. Nature, 509, 86-90.",
@@ -308,11 +308,11 @@
   "retraction": {
     "title": "Paradox Earth caught a false trend",
     "place": "Global land: soil water (GLDAS-2.1 Noah)",
-    "headline_template": "Paradox Earth caught a false trend: the apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around {breaks}) and disappears in a consistently forced NASA product (FLDAS, {fldas_window}: {fldas_slope} mm/decade, p = {fldas_p}, {fldas_verdict}).",
+    "headline_template": "The apparent GLDAS-2.1 soil-water decline was withdrawn because it lines up with documented changes in the model's radiation forcing (level shifts around {breaks}) and disappears in a consistently forced NASA product (FLDAS, {fldas_window}: {fldas_slope} mm/decade, p = {fldas_p}, {fldas_verdict}).",
     "user": {
       "who": "Teachers and students using the Paradox Earth explorer",
       "decision": "Whether to trust a dramatic trend line before checking how the data were made",
-      "why_it_matters": "A tool that rejects its own most exciting result shows why every trend needs a homogeneity check, not just a p-value."
+      "why_it_matters": "Check a trend's input data for breaks before trusting its p-value; this apparent decline lines up with a change in the model's radiation forcing."
     },
     "literature": [
       {
@@ -331,7 +331,7 @@
         "citation": "Qin, T., Feng, J., Zhang, X., Li, C., Fan, J., Zhang, C., Dong, B., Wang, H., & Yan, D. (2023). Continued decline of global soil moisture content, with obvious soil stratification and regional difference. Science of the Total Environment, 864, 160982.",
         "url_or_doi": "https://doi.org/10.1016/j.scitotenv.2022.160982",
         "agrees": false,
-        "note": "Reports a GLDAS-Noah soil-moisture decline (0-200 cm, 2000-2020); our checks attribute the post-2010 part largely to forcing changes. Different question and method: they analyse the model record as given, we test it for forcing breaks first."
+        "note": "Reports a GLDAS-Noah soil-moisture decline (0-200 cm, 2000-2020); our checks attribute the post-2010 part largely to forcing changes. They analyse the model record as given; we test it for forcing breaks first."
       }
     ],
     "caveats": [
@@ -360,17 +360,17 @@
     {
       "key": "nw-india-groundwater",
       "hotspot": "NW India",
-      "title": "GRACE sees what the soil model cannot",
+      "title": "GRACE sees water loss the land model misses",
       "place": "Northwest India and eastern Pakistan (Punjab, Haryana, Rajasthan; GRACE hotspot box 24-34°N, 68-80°E)",
       "centroid": [
         29.0,
         76.0
       ],
-      "headline_template": "Over {years}, GRACE/GRACE-FO satellite gravity shows water storage over northwest India falling by about {grace_abs} mm per decade (mean of {n_boxes} 3-degree boxes, {n_sig} significant after false-discovery correction), while NASA's FLDAS land model, which has no groundwater pumping, shows soil water changing by {model} mm per decade. The missing water lines up with the groundwater depletion reported for this region in the literature.",
+      "headline_template": "Over {years}, GRACE/GRACE-FO satellite gravity shows water storage over northwest India falling by about {grace_abs} mm per decade (mean of {n_boxes} boxes, each 3° across; {n_sig} are significant after false-discovery correction), while NASA's FLDAS land model, which has no groundwater pumping, shows soil water changing by {model} mm per decade. The missing water lines up with the groundwater depletion reported for this region in the literature.",
       "user": {
         "who": "A groundwater regulator or irrigation planner in Punjab-Haryana (e.g. a state groundwater authority)",
         "decision": "Whether to set or tighten groundwater extraction limits and crop-diversification incentives for over-exploited blocks",
-        "why_it_matters": "Soil-moisture and rainfall products can look normal or even wet here while the aquifer is drawn down; an independent satellite measure of total water storage is the check that catches what those products cannot see."
+        "why_it_matters": "Soil-moisture and rainfall products can look normal or even wet here while the aquifer is drawn down; GRACE measures total water storage, aquifer included, so it can catch a decline those products miss."
       },
       "literature": [
         {

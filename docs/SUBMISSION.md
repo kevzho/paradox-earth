@@ -23,7 +23,7 @@ numbers before pasting. Lines marked **[TEAM]** must be filled in or confirmed b
       `meta.json` `retraction.breakpoints` instead of a regex, rebuild, re-check.
 - [ ] **Chile card names the wrong place.** The `drying-chile_megadrought` cluster spans 34-54°S (centroid ~44°S);
       only 12 of 64 tiles are in the 30-38°S megadrought core and 7 are in Argentina. Rename title/place/user in
-      `scripts/cards_curation.json` (e.g. "Drying along the southern Andes", "South-central Chile to southern
+      `scripts/cards_curation.json` (e.g. "The southern Andes got drier, 2000-2025", "South-central Chile to southern
       Patagonia") and the slide-3 "Central Chile" label, then rebuild cards, slides and video. This page already
       uses the corrected wording.
 - [ ] **Overclaiming copy on other surfaces.** Make the site, slides and video match this page: tagline "The global

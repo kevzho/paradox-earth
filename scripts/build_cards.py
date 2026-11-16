@@ -287,9 +287,9 @@ def check_windows(data: SiteData, tiles, sign):
     full_med = median(full_vals)
     meds = {k: median(v) for k, v in per_win.items()}
     statuses = []
-    parts = [f"{full[0]}-{full[1]}: {fmt_pct(full_med)}/decade"]
+    parts = [f"{full[0]}-{full[1]} {fmt_pct(full_med)}/decade"]
     for k, m in meds.items():
-        parts.append(f"{k}: {fmt_pct(m)}/decade")
+        parts.append(f"{k} {fmt_pct(m)}/decade")
         if m is None or full_med is None or full_med == 0:
             statuses.append("not_run")
             continue
@@ -310,12 +310,12 @@ def check_windows(data: SiteData, tiles, sign):
         status = "partial"
     else:
         status = "not_run"
-    verdict = {"pass": "same sign, within a factor of 2",
-               "partial": "same sign but magnitude changes by more than a factor of 2",
-               "fail": "sign flips or vanishes in at least one window",
-               "not_run": "windows could not be evaluated"}[status]
-    detail = (f"Region trend (median over {used} tiles of OLS on annual means; overlapping windows) - "
-              + "; ".join(parts) + f" -> {verdict}.")
+    verdict = {"pass": "Same sign, within a factor of 2",
+               "partial": "Same sign, but the size changes by more than a factor of 2",
+               "fail": "The sign flips or vanishes in at least one window",
+               "not_run": "The windows could not be evaluated"}[status]
+    detail = (f"Median trend over {used} tiles (straight-line fit to annual means), in overlapping windows: "
+              + "; ".join(parts) + f". {verdict}.")
     gw = (data.meta.get("headline") or {}).get("windows") or {}
     if status == "pass" and gw:
         shares = "; ".join(f"{k}: {100 * v['share_area_up']:.1f}% wetting / {100 * v['share_area_down']:.1f}% drying"
@@ -332,7 +332,9 @@ def check_neighbours(tiles, sign, knn, knn_labels=None, knn_source=None):
     if n == 0:
         return {"check": name, "status": "not_run", "detail": "No tiles."}, None
     share = sum(1 for t in tiles if t.get("lisa") == want) / n
-    queen = f"Queen-contiguity LISA labels {share:.0%} of tiles as {want} clusters"
+    gloss = "a cluster of wetting trends" if want == "HH" else "a cluster of drying trends"
+    queen = (f"With touching tiles as neighbours (queen contiguity), the local cluster test (LISA) labels "
+             f"{share:.0%} of tiles {want} ({gloss})")
     if knn_labels:
         have = [t for t in tiles if t["id"] in knn_labels]
         if have:
@@ -346,7 +348,7 @@ def check_neighbours(tiles, sign, knn, knn_labels=None, knn_source=None):
             else:
                 status = "fail"
             return {"check": name, "status": status,
-                    "detail": (f"{queen}; k-nearest-neighbour weights label {k_share:.0%} as {want}, "
+                    "detail": (f"{queen}. With the nearest tiles as neighbours (kNN), it labels {k_share:.0%} {want}, "
                                f"and {agree:.0%} of the queen {want} tiles keep their label under kNN.")}, share
     if knn is None:
         return {"check": name, "status": "not_run",
@@ -371,8 +373,8 @@ def check_independent_product(data, region_id, sign):
     same, sig = x["fldas_share_tiles_same_sign"], x["fldas_share_tiles_raw_p05_same_sign"]
     status = "pass" if same >= 0.9 and sig >= 0.5 else "partial" if same >= 0.7 else "fail"
     word = "wetting" if sign > 0 else "drying"
-    detail = (f"Over 2003-2024, CHIRPS-based precipitation shows {word} in {same:.0%} of this region's {x['n_tiles']} "
-              f"tiles ({sig:.0%} individually significant at p < 0.05); median trend "
+    detail = (f"Over 2003-2024, CHIRPS-based precipitation shows {word} in {same:.0%} of the {x['n_tiles']} region "
+              f"tiles with FLDAS data ({sig:.0%} individually significant at p < 0.05); median trend "
               f"{x['fldas_chirps_2003_2024_median_slope']:+.1f} mm/month per decade vs "
               f"{x['gldas_2003_2024_median_slope']:+.1f} in GLDAS over the same years.")
     return {"check": name, "status": status, "detail": detail}
@@ -391,7 +393,12 @@ def check_literature(lit):
         status = "partial"
     else:
         status = "fail"
-    detail = f"{len(lit)} source(s): {yes} agree, {part} partly agree, {no} disagree."
+    if len(lit) == 1:
+        detail = "1 source, which " + ("agrees." if yes else "partly agrees." if part else "disagrees.")
+    else:
+        verb = lambda k, v: f"{k} {v}s" if k == 1 else f"{k} {v}"  # noqa: E731  "1 agrees", "2 agree"
+        detail = (f"{len(lit)} sources: {verb(yes, 'agree')}, {verb(part, 'partly agree')}, "
+                  f"{verb(no, 'disagree')}.")
     return {"check": name, "status": status, "detail": detail}
 
 
@@ -461,10 +468,11 @@ def headline_for(numbers, place, sign, period, tile_deg, detectable=True):
     slope_txt = f"{slope:+.2f} mm/month" if slope is not None else "n/a"
     deg = "one-degree" if tile_deg == 1 else f"{tile_deg:g}-degree"
     what = f"a detectable {word} trend" if detectable else f"a {word} tendency (not a robust trend)"
-    return (f"Across {numbers['n_tiles']} {deg} land tiles ({fmt_area(numbers['area_km2'])}) in {place}, "
+    # `place` is shown right above the headline on every card, so it is not repeated here
+    return (f"Across {numbers['n_tiles']} {deg} land tiles ({fmt_area(numbers['area_km2'])}), "
             f"GLDAS-2.1 precipitation shows {what} of "
             f"{fmt_pct(numbers['median_pct_per_decade'])} per decade ({slope_txt} per decade, median tile, "
-            f"{period[0][:4]}-{period[1][:4]}), with {share_txt} of tiles significant after "
+            f"{period[0][:4]}-{period[1][:4]}). {share_txt} of tiles are significant after "
             f"false-discovery correction.")
 
 
@@ -539,10 +547,13 @@ def retraction_card(data: SiteData, cur):
     ac, fl, gr = sw.get("artifact_control") or {}, sw.get("fldas") or {}, sw.get("grace") or {}
     doc_lit = cur.get("literature", [])
 
+    # the retraction text already names the break dates, so the short lead is only used when it is missing
+    lead = "" if text else (f"Level shift detected around {breaks_txt}." if breaks else "Level shift detected.")
     homog = {"check": "Homogeneity (break-point) check", "status": "fail",
-             "detail": (f"Level shift detected around {breaks_txt}. " if breaks else "Level shift detected. ") + text
-             + (" README_GLDAS2 documents an apparent shift in the AGRMET radiation climatology (section 1.5.3) and "
-                "degraded WWMCA radiation from mid-2024 (section 1.2.3); the detected steps line up with both."
+             "detail": (lead or text)
+             + (" README_GLDAS2 documents two problems in the model's radiation inputs (AGRMET/WWMCA): an apparent "
+                "shift in the AGRMET climatology (section 1.5.3) and degraded WWMCA radiation from mid-2024 "
+                "(section 1.2.3). The detected steps line up with both."
                 if doc_lit else "")}
 
     # Same model, different forcing (GLDAS-2.0 control)
@@ -550,10 +561,17 @@ def retraction_card(data: SiteData, cur):
     h = ac.get("headline") or {}
     if ac.get("swdown_step_21_W_m2") is not None:
         cw = h.get("common_window") or ["?", "?"]
+        # the reading's first sentence restates the radiation step given here, so only its evaporation clause and
+        # the sentences after it (the 2011-2013 dip) are kept
+        reading = ac.get("reading") or ""
+        first, sep, rest = reading.partition(". ")
+        if sep and first.startswith("Incoming solar radiation steps up"):
+            evap = first.partition(", and ")[2]
+            reading = (evap[:1].upper() + evap[1:] + ". " if evap else "") + rest
         detail = (f"{ac.get('what', 'GLDAS-2.1 vs GLDAS-2.0')}. At {ac.get('step_date', '?')} incoming solar radiation "
                   f"in the 2.1 forcing steps by {ac['swdown_step_21_W_m2']:+.1f} W/m² (95% CI "
                   f"{_fmt_ci(ac.get('swdown_step_21_ci95'))}); in 2.0 the step is {ac['swdown_step_20_W_m2']:+.1f} W/m² "
-                  f"(95% CI {_fmt_ci(ac.get('swdown_step_20_ci95'))}). " + (ac.get("reading") or ""))
+                  f"(95% CI {_fmt_ci(ac.get('swdown_step_20_ci95'))}). " + reading)
         if h.get("soil_trend_2.1_common_mm_per_decade") is not None and h.get("soil_trend_2.0_common_mm_per_decade") is not None:
             detail += (f" Soil-water trend over {cw[0][:4]}-{cw[-1][:4]}: {h['soil_trend_2.1_common_mm_per_decade']:+.1f} "
                        f"mm/decade in 2.1 (p = {h['soil_trend_2.1_common_p']:.2f}) vs "
@@ -570,8 +588,8 @@ def retraction_card(data: SiteData, cur):
         ci = fl.get("aggregate_ci95")
         detectable = fp is not None and fp < 0.05 and fl["aggregate_slope_mm_per_decade"] < 0
         detail = (f"FLDAS (Noah driven by MERRA-2 + CHIRPS, no radiation-forcing switch): global land soil water "
-                  f"{fl['aggregate_slope_mm_per_decade']:+.1f} mm/decade (95% CI {_fmt_ci(ci)}, p = {fp:.2f}) - "
-                  + ("a detectable decline." if detectable else "no detectable global trend, and no decline.")
+                  f"{fl['aggregate_slope_mm_per_decade']:+.1f} mm/decade (95% CI {_fmt_ci(ci)}, p = {fp:.2f}). "
+                  + ("That is a detectable decline." if detectable else "There is no detectable global trend, and no decline.")
                   + f" After FDR correction {100 * fl.get('share_area_wetting', 0):.1f}% of land is detectably "
                   f"wetting and {100 * fl.get('share_area_drying', 0):.1f}% drying.")
         fl_check = {"check": name, "status": "pass" if detectable else "fail", "detail": detail}
@@ -620,7 +638,7 @@ def retraction_card(data: SiteData, cur):
         "numbers": numbers,
         "robustness": [homog, control, fl_check, gr_check],
         "user": cur["user"],
-        "evidence_level": "withdrawn (data artefact caught by the detective)",
+        "evidence_level": "withdrawn (data artefact caught by the detector's own checks)",
         "literature": literature_out(doc_lit),
         "caveats": list(cur.get("caveats", [])),
         "breakpoints": breaks,
@@ -674,27 +692,31 @@ def observation_card(data: SiteData, cur):
 
     share = n_sig / n_box if n_box else 0.0
     status = "pass" if share >= 0.9 else "partial" if share >= 0.5 else "fail"
-    detail = (f"{n_sig} of {n_box} 3-degree boxes ({share:.0%}) have GRACE/GRACE-FO water-storage trends that are "
-              f"significant after Benjamini-Hochberg FDR correction, {yrs}")
+    detail = (f"{n_sig} of {n_box} boxes ({share:.0%}), each 3° across, have GRACE/GRACE-FO water-storage trends that "
+              f"are significant after Benjamini-Hochberg FDR correction, {yrs}")
     if rows:
         flags = sorted({r["glacier_influenced"] for r in sig_rows if r.get("glacier_influenced")})
         ns_lats = sorted({float(r["lat"]) for r in rows if r.get("grace_sig_fdr") != "True"})
-        detail += (f"; {n_sig_neg} of those {len(sig_rows)} are declines. {n_glacier} of the significant boxes lie in "
-                   f"the glacier-influenced zone ({', '.join(flags) or 'none'}), so part of their signal may be "
-                   f"glacier mass loss leaking into the mascons rather than groundwater. Not significant: "
-                   f"{n_box - n_sig} boxes, centred at {', '.join(f'{x:g}' for x in ns_lats)}°N.")
+        n_s = len(sig_rows)
+        decl = f"all {n_s} are declines" if n_sig_neg == n_s else f"{n_sig_neg} of those {n_s} are declines"
+        glac = f"all {n_s} lie" if n_glacier == n_s else f"{n_glacier} of them lie"
+        detail += (f"; {decl}, and {glac} in the glacier-influenced zone ({', '.join(flags) or 'none'}), so part of "
+                   f"their signal may be glacier mass loss leaking into the GRACE grid cells (mascons) rather than "
+                   f"groundwater. Not significant: {n_box - n_sig} boxes, centred at "
+                   f"{', '.join(f'{x:g}' for x in ns_lats)}°N.")
     else:
         detail += "."
     c_sig = {"check": "GRACE significance (FDR, per 3-degree box)", "status": status, "detail": detail}
 
     opposite = (g < 0 < m) or (m < 0 < g)
     d_status = "pass" if opposite and abs(g) >= 3 * abs(m) else "partial" if abs(g) >= 3 * abs(m) else "fail"
-    detail = (f"Box mean: GRACE {g:+.0f} mm/decade vs NASA FLDAS soil water (0-200 cm) {m:+.0f} mm/decade - "
-              + ("opposite signs." if opposite else "same sign.")
-              + (f" The model shows a rise in {n_model_pos} of {len(rows)} boxes ({n_model_sig} FDR-significant)."
+    detail = (f"Box mean: GRACE {g:+.0f} mm/decade vs NASA FLDAS soil water (0-200 cm) {m:+.0f} mm/decade. "
+              + ("The signs are opposite." if opposite else "The signs match.")
+              + " The land model has no groundwater pumping or irrigation"
+              + (f" and shows a rise in {n_model_pos} of {len(rows)} boxes ({n_model_sig} FDR-significant)"
                  if rows else "")
-              + " The land model has no groundwater pumping or irrigation, so a decline GRACE sees and the soil model "
-              "does not points to storage the model does not track (groundwater, or glacier ice near the Himalaya). Globally, GRACE and FLDAS soil water agree in sign over "
+              + ". When GRACE sees a decline the land model does not, the gap points to storage the model does not track "
+              "(groundwater, or glacier ice near the Himalaya). Globally, GRACE and FLDAS soil water agree in sign over "
               f"{100 * vs.get('sign_match_area_sig_either', float('nan')):.0f}% of the area where either is significant.")
     c_model = {"check": "Disagreement with the land model (NASA FLDAS soil water)", "status": d_status, "detail": detail}
     c_lit = check_literature(cur.get("literature", []))
