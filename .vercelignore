@@ -1,0 +1,7 @@
+# Deploy only the static explorer and its demo assets; never raw data, outputs or the venv
+/*
+!/index.html
+!/vercel.json
+!/site
+!/demo
+/demo/review
