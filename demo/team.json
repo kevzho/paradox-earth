@@ -1,13 +1,12 @@
 {
-  "_note": "CONFIRM BEFORE SUBMITTING: team name and member names must match the Space Apps team page.",
   "team_name": "Jack & Jill",
   "members": [
-    "Kevin Zhou (confirm)",
-    "Kundana Kommini (confirm)"
+    "Kevin Zhou",
+    "Kundana Kommini"
   ],
   "challenge": "Be An Earth System Trend Detective!",
   "event": "NASA International Space Apps Challenge 2026",
-  "local_event": "LOCAL EVENT (confirm)",
+  "local_event": "Universal Event",
   "project_url": "https://github.com/kevzho/paradox-earth",
   "site_url": "https://paradoxearth.xyz"
 }
