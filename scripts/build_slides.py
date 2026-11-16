@@ -756,7 +756,7 @@ b {{ font-weight: 700; }}
 .s-title {{ justify-content: space-between; }}
 .s-title .bar {{ display: flex; height: 16px; width: 100%; margin: 24px 0 22px; border: 2px solid var(--edge); }}
 .s-title .bar i {{ display: block; height: 100%; }}
-.s-title .tagline {{ font-size: 30px; line-height: 1.25; max-width: 1050px; }}
+.s-title .tagline {{ font-size: 27px; line-height: 1.25; max-width: 1100px; }}
 .s-title .tagline b {{ color: var(--hl); }}
 .s-title .try {{ margin-top: 20px; font-size: 22px; display: flex; align-items: center; gap: 16px; }}
 .s-title .try .url {{ font-size: 40px; }}
@@ -839,7 +839,7 @@ b {{ font-weight: 700; }}
     <div class="tag">{esc(team.get("event", "NASA International Space Apps Challenge"))} · {esc(team.get("challenge", m.get("challenge")))}</div>
     <h1>{esc(m.get("project", "Paradox Earth"))}</h1>
     <div class="bar"><i style="flex:{reg.get('share_area_down') or 1};background:var(--dry)"></i><i style="flex:{max(0.0, 1 - (reg.get('share_area_up') or 0) - (reg.get('share_area_down') or 0))};background:var(--land)"></i><i style="flex:{reg.get('share_area_up') or 1};background:var(--wet)"></i></div>
-    <p class="tagline">Averaged over all the world’s land, rainfall has barely changed in {n_years} years. Look region by region and <b>an area about the size of the United States</b> is getting wetter or drier. Paradox Earth finds those places and shows how sure we can be.</p>
+    <p class="tagline">Averaged over all the world’s land, rainfall has barely changed in {n_years} years. Look region by region and <b>an area about the size of the United States</b> is getting wetter or drier. Paradox Earth is an interpretable, human-centered trend detector: it explains every finding in plain language, and its checks caught one of our own findings as wrong.</p>
     <div class="try">Try it live: <a class="url" href="{esc(site)}">{esc(site_short)}</a></div>
   </div>
   <dl class="credits">
@@ -878,7 +878,7 @@ b {{ font-weight: 700; }}
     <div>
       <div class="num box w"><div class="v wet">{fmt_area(area_up)}</div><div class="k">getting <b>wetter</b> ({fmt_pct(reg.get("share_area_up"))} of land)</div><div class="where">{wet_names}</div></div>
       <div class="num box d"><div class="v dry">{fmt_area(area_dn)}</div><div class="k">getting <b>drier</b> ({fmt_pct(reg.get("share_area_down"))} of land)</div><div class="where">{dry_names}</div></div>
-      <p class="muted" style="font-size:15px;line-height:1.35">Together, about the size of the United States. Shorter periods show smaller areas; we report those too.</p>
+      <p class="muted" style="font-size:15px;line-height:1.35">Together, about the size of the United States. The shares depend on the period (2003–2025: {fmt_pct(get(wins, "2003-2025", "share_area_up"))} wetter, {fmt_pct(get(wins, "2003-2025", "share_area_down"))} drier), but all six regions keep their direction in every period.</p>
     </div>
   </div>
   <div class="foot"><span>Only places that pass every statistical safeguard are coloured. These are trends, not causes.</span><span>3 / 7</span></div>

@@ -539,7 +539,8 @@
     const d = m.dataset || {};
     const src = d.version ? `NASA GLDAS-${esc(d.version)}` : "NASA GLDAS";
     const head = `<p class="eyebrow">${nw(src + " ·")} ${nw("precipitation ·")} ${nw(periodText())}</p>
-      <h1 tabindex="-1">${taglineHTML(m.tagline)}</h1>`;
+      <h1 tabindex="-1">${taglineHTML(m.tagline)}</h1>
+      <p class="lead-sub">Interpretable and human-centered: every finding comes with a plain-language report card and the people it could help, and the checks caught one of our own findings as wrong.</p>`;
     setPreReveal(step === 1 && S.reveal < 1);
     if (step === 1) {
       panel.innerHTML = `${head}
@@ -555,12 +556,22 @@
           <div class="w"><span class="big">${pct(g.share_area_up, 1)}</span><small>of land area with a detectable wetting trend</small></div>
           <div class="d"><span class="big">${pct(g.share_area_down, 1)}</span><small>of land area with a detectable drying trend</small></div>
         </div>
+        ${windowNote()}
         <p class="detective">Without correcting for testing ${n} tiles at once, <span class="num">${pct(g.share_tiles_raw_p_below_alpha, 0)}</span> of tiles would have looked significant. The detector keeps only those that survive the false-discovery correction (FDR, q&nbsp;&lt;&nbsp;${g.alpha_fdr ?? S.alpha}).</p>
         <p class="muted small">Most land shows no detectable trend; where one is detectable, some regions are wetting and others drying. ${coarse ? "Tap" : "Click"} any tile to see its monthly record for ${periodText()}, or open a case file.</p>
         <div class="btn-row"><a class="btn" href="#cases">Open the case files</a><button class="btn ghost" type="button" id="replayBtn">Replay</button></div>`;
       $("#replayBtn").addEventListener("click", () => { S.reveal = 0; setURL(null, null); render(); showIntro(1); $("#revealBtn")?.focus(); });
     }
     render();
+  }
+  // the shares depend on the period; say so next to them, with the shortest-start window's numbers
+  function windowNote() {
+    const w = (S.meta.headline.windows || {})["2003-2025"];
+    if (!w) return "";
+    const regions = (S.cards || []).filter((c) => c.kind === "wetting" || c.kind === "drying");
+    const held = regions.filter((c) => (c.robustness || []).some((r) => /window/i.test(r.check) && r.status === "pass"));
+    const all = regions.length && held.length === regions.length;
+    return `<p class="window-note">Shares depend on the period: for 2003–2025 they are <span class="num">${pct(w.share_area_up, 1)}</span> wetting and <span class="num">${pct(w.share_area_down, 1)}</span> drying.${all ? ` All ${regions.length} case-file regions keep their direction in every period.` : ""}</p>`;
   }
   function taglineHTML(t) {
     const parts = String(t || "").split(/(?<=\.)\s+/);

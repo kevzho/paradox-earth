@@ -71,8 +71,8 @@ Paradox Earth is a trend detective for NASA land data. It takes 26 years (2000�
 precipitation and tests every 1° land tile, 17,284 of them, with an autocorrelation-aware trend test and a
 false-discovery correction. The result is a paradox. Averaged over all land, precipitation shows no detectable
 trend (−0.88 mm/month per decade, p = 0.08). Underneath, 4.3% of land area shows a detectable wetting trend and
-3.1% a detectable drying trend. These are small, window-sensitive shares, so every finding comes as a Discovery
-Card. Each card has a robustness checklist, published literature, caveats and a named user, such as a
+3.1% a detectable drying trend. The shares vary with the time window (2003–2025: 1.3% wetting, 2.6% drying), but
+all six regions keep their direction in every window, so every finding comes as a Discovery Card. Each card has a robustness checklist, published literature, caveats and a named user, such as a
 hydropower planner on the Zambezi or an extension office in the Sahel. The detective also checks itself: it
 caught and withdrew a dramatic soil-water decline whose level shifts line up with documented changes in the
 model's radiation input; GLDAS-2.0 and NASA FLDAS back that up, and GRACE satellite gravity shows where the
@@ -118,7 +118,8 @@ Over 2000–2025, land-area-weighted global land precipitation shows a trend of 
 (−1.3% per decade of a 69.9 mm/month mean; 95% CI −1.88 to +0.12; p = 0.08). That is NOT a detectable trend.
 Tile by tile, we tested 17,284 one-degree land tiles (133 million km²). After Benjamini–Hochberg false-discovery
 correction (q < 0.05), 4.3% of land area (5.7 million km²) shows a detectable wetting trend and 3.1%
-(4.2 million km²) a detectable drying trend. Without correction, 24% of tiles have p < 0.05, against about 5%
+(4.2 million km²) a detectable drying trend. The shares vary with the time window (2003–2025: 1.3% wetting,
+2.6% drying), but all six regions keep their direction in every window. Without correction, 24% of tiles have p < 0.05, against about 5%
 expected by chance. We report the corrected shares.
 
 We do not overstate this. The shares depend on the window. With the same method they shrink to 1.3% wetting and

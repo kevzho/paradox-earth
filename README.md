@@ -2,6 +2,9 @@
 
 **The global average looks flat. A few regions are not.**
 
+An interpretable, human-centered trend detector: every finding comes with a plain-language report card and the
+people it could help, and the checks caught one of our own findings as wrong.
+
 NASA International Space Apps Challenge 2026, challenge *Be An Earth System Trend Detective!*
 
 Averaged over all of Earth's land, precipitation in NASA's GLDAS-2.1 dataset shows no detectable trend from 2000 to
@@ -10,8 +13,8 @@ a 95% confidence interval of **[-1.88, +0.12] mm/month per decade** and **p = 0.
 is **not detectable**. Underneath that flat average, we tested 17,284 one-degree land tiles and corrected for false
 discoveries (Benjamini-Hochberg FDR, q < 0.05). Most land shows no detectable trend. A small share does, in
 **opposite directions**: **4.3% of tested land area (5.7 million km²) shows a detectable wetting trend** and **3.1%
-(4.2 million km²) a detectable drying trend** over 2000-2025. These shares are smaller in shorter windows (see
-Limits). Examples include wetting in the Central Sahel and northern China, and drying along the southern Andes
+(4.2 million km²) a detectable drying trend** over 2000-2025. The shares vary with the time window (2003-2025:
+1.3% wetting, 2.6% drying; see Limits), but all six case-file regions keep their direction in every window. Examples include wetting in the Central Sahel and northern China, and drying along the southern Andes
 (south-central Chile to Patagonia) and in the southwestern Amazon. That is the paradox: a flat global mean can sit on
 top of regional trends that point in opposite directions. Paradox Earth finds these regions, grades how strong the
 evidence is for each one, and says where the evidence is weak.
