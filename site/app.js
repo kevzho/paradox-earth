@@ -10,9 +10,9 @@
 
   // ---------- palette (kept in sync with style.css tokens) ----------
   const C = {
-    ocean: [9, 17, 31], grat: [20, 32, 54], neutral: [96, 108, 132], faded: [44, 55, 79],
+    ocean: [17, 18, 20], grat: [40, 42, 46], neutral: [108, 110, 115], faded: [62, 64, 69],
     // outlier is a pale lilac so it cannot be mistaken for the blue wetting clusters under red-green colour blindness
-    mid: [52, 62, 84], wet: [75, 163, 227], dry: [227, 154, 59], outlier: [230, 220, 245], none: [30, 40, 58],
+    mid: [66, 68, 73], wet: [90, 162, 216], dry: [222, 155, 74], outlier: [230, 220, 245], none: [38, 40, 44],
   };
   const rgb = (a) => `rgb(${a[0] | 0},${a[1] | 0},${a[2] | 0})`;
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -220,7 +220,7 @@
     } catch (e) { console.warn("Globe init failed", e); globe = null; return false; }
     globe
       .backgroundColor("rgba(0,0,0,0)")
-      .showAtmosphere(true).atmosphereColor("#5f9fd6").atmosphereAltitude(0.16)
+      .showAtmosphere(false)
       .showGraticules(false)
       .width(el.clientWidth).height(el.clientHeight)
       .pointOfView({ lat: 18, lng: 10, altitude: 2.3 })
