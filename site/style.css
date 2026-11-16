@@ -355,6 +355,9 @@ tr:last-child > td, tbody tr:last-child > th { border-bottom: 0; }
 .credit-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; overflow-wrap: anywhere; }
 .caveats li { max-width: 75ch; }
 
+/* the code link stands out in the top bar so judges can find it */
+.topbar nav a.nav-gh { color: #111; background: var(--focus); font-weight: 700; margin-left: 6px; }
+.topbar nav a.nav-gh:hover { background: var(--text); color: var(--ink-0); }
 /* ---------- brutalist surface: square blocks, hard shadows, inverted states, no glow ---------- */
 a { text-decoration-thickness: 2px; }
 h2, .panel h1:not(.tile-h) { text-transform: uppercase; letter-spacing: 0; line-height: .98; }
@@ -427,7 +430,8 @@ thead th { border-bottom: 2px solid var(--edge); }
   .stage-cta { display: none !important; }
 }
 @media (max-width: 480px) {
-  .wordmark span { font-size: 1.2rem; }
+  .wordmark span { display: none; } /* room for the GitHub link; the hero names the project */
+  .topbar nav a.nav-gh { margin-left: 2px; }
   .topbar { gap: 8px; }
   .topbar nav { gap: 0; }
   .topbar nav a { padding: 10px 9px; font-size: .8rem; }

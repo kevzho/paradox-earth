@@ -559,7 +559,7 @@
         ${windowNote()}
         <p class="detective">Without correcting for testing ${n} tiles at once, <span class="num">${pct(g.share_tiles_raw_p_below_alpha, 0)}</span> of tiles would have looked significant. The detector keeps only those that survive the false-discovery correction (FDR, q&nbsp;&lt;&nbsp;${g.alpha_fdr ?? S.alpha}).</p>
         <p class="muted small">Most land shows no detectable trend; where one is detectable, some regions are wetting and others drying. ${coarse ? "Tap" : "Click"} any tile to see its monthly record for ${periodText()}, or open a case file.</p>
-        <div class="btn-row"><a class="btn" href="#cases">Open the case files</a><button class="btn ghost" type="button" id="replayBtn">Replay</button></div>`;
+        <div class="btn-row"><a class="btn" href="#cases">Open the case files</a><a class="btn ghost" href="https://github.com/kevzho/paradox-earth" target="_blank" rel="noopener">Code on GitHub<span aria-hidden="true"> ↗</span><span class="sr-only"> (opens in a new tab)</span></a><button class="btn ghost" type="button" id="replayBtn">Replay</button></div>`;
       $("#replayBtn").addEventListener("click", () => { S.reveal = 0; setURL(null, null); render(); showIntro(1); $("#revealBtn")?.focus(); });
     }
     render();
